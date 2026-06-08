@@ -3,7 +3,7 @@ module.exports = {
     name: 'la-busche',
     script: 'npm',
     args: 'start',
-    cwd: '/root/la-busche',
+    cwd: '/home/ubuntu/la-busche',
     env: {
       NODE_ENV: 'production',
       PORT: 3001,
