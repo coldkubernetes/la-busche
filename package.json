@@ -2,6 +2,11 @@
   "name": "la-busche",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/coldkubernetes/la-busche"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
