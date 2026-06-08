@@ -1036,3 +1036,119 @@ BG:
 Context: Footer brand line at the very bottom of the Board screen.
 EN: `La Busche · Sofia Transit`
 BG:
+
+---
+
+## About Page
+
+---
+
+### about.back.aria
+
+Context: Accessible label (aria-label) on the ← back button in the About page header that returns to Home.
+EN: `Back to home`
+BG: `Назад към началото`
+
+---
+
+### about.intro
+
+Context: Opening paragraph on the About page, shown directly below the brand header.
+EN: `A personal Sofia public transport app, built because I got tired of checking the stops in Google Maps.`
+BG: `Лично приложение за градския транспорт в София, направено защото се изморих да проверявам спирките в Google Maps.`
+
+---
+
+### about.section.what
+
+Context: Section heading for the "What it does" block on the About page.
+EN: `What it does`
+BG: `Какво прави`
+
+---
+
+### about.what.body
+
+Context: Body text of the "What it does" section on the About page.
+EN: `Shows live and scheduled departures for stops you care about, organised into From Home and To Home views. You configure your own stops once, and it just works. No account. No ads. No data collected.`
+BG: `Показва пристигания на живо и по разписание за спирките, които те интересуват, наредени в изгледи „От вкъщи" и „Към вкъщи". Настройваш спирките си веднъж — и работи. Без акаунт. Без реклами. Без събиране на данни.`
+
+---
+
+### about.section.data
+
+Context: Section heading for the data attribution block on the About page.
+EN: `Data`
+BG: `Данни`
+
+---
+
+### about.data.body
+
+Context: Body text of the "Data" section describing the data source and licence.
+EN: `Transit data is provided by Sofia Urban Mobility Center under Creative Commons Attribution 4.0 International (CC BY 4.0).`
+BG: `Данните за транспорта са предоставени от Център за градска мобилност, София по лиценз Creative Commons Признание 4.0 Международен (CC BY 4.0).`
+
+---
+
+### about.data.source
+
+Context: Monospaced source line in the Data section (not a link, plain text).
+EN: `Source: gtfs.sofiatraffic.bg`
+BG: `Източник: gtfs.sofiatraffic.bg`
+
+---
+
+### about.data.license
+
+Context: Monospaced licence line in the Data section (not a link, plain text).
+EN: `License: creativecommons.org/licenses/by/4.0`
+BG: `Лиценз: creativecommons.org/licenses/by/4.0`
+
+---
+
+### about.section.opensource
+
+Context: Section heading for the open source block on the About page.
+EN: `Open source`
+BG: `Отворен код`
+
+---
+
+### about.opensource.body
+
+Context: Body text of the "Open source" section.
+EN: `The source code is published under the MIT License and available on GitHub. You can self-host it, fork it, or adapt it for another city's GTFS feed.`
+BG: `Изходният код е публикуван под лиценз MIT и е достъпен в GitHub. Можеш да го хостваш сам, да го разклониш или да го адаптираш за GTFS данни на друг град.`
+
+---
+
+### about.opensource.link
+
+Context: Monospaced GitHub link line in the Open source section (plain text, not an anchor).
+EN: `→ github.com/coldkubernetes/la-busche`
+BG: `→ github.com/coldkubernetes/la-busche`
+
+---
+
+### about.section.disclaimer
+
+Context: Section heading for the disclaimer block on the About page.
+EN: `Disclaimer`
+BG: `Отказ от отговорност`
+
+---
+
+### about.disclaimer.body
+
+Context: Body text of the "Disclaimer" section.
+EN: `This app is provided as-is, with no warranty of any kind. Departure times depend on open data feeds that may be delayed, incomplete, or temporarily unavailable. Don't use this as your only source of truth when timing matters.`
+BG: `Приложението се предоставя „такова, каквото е", без никаква гаранция. Времената на тръгване зависят от отворени данни, които може да са забавени, непълни или временно недостъпни. Не го използвай като единствен ориентир, когато времето е от значение.`
+
+---
+
+### about.section.contact
+
+Context: Section heading for the contact block on the About page. The email address itself is hardcoded and not translated.
+EN: `Contact`
+BG: `Контакт`
