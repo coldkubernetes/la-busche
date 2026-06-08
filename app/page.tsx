@@ -190,16 +190,16 @@ export default function HomePage() {
         </div>
       )}
 
-      <footer className="mt-8 flex flex-col items-center gap-2.5">
+      <footer className="mt-8 text-center">
+        <p className="text-[0.6rem] text-[#333366] tracking-widest uppercase font-semibold">
+          Sofia Urban Mobility · GTFS Live Data
+        </p>
         <Link
           href="/about"
-          className="text-[0.6rem] text-[#555588] hover:text-[#8888cc] tracking-widest uppercase font-semibold transition-colors"
+          className="text-[0.6rem] text-[#333366] hover:text-[#7777bb] tracking-widest uppercase font-semibold mt-1 block transition-colors"
         >
-          {t('welcome.about')}
+          About · Open Source · CC BY 4.0
         </Link>
-        <p className="text-[0.6rem] text-[#333366] tracking-widest uppercase font-semibold">
-          {t('app.footer')}
-        </p>
       </footer>
     </main>
   );
