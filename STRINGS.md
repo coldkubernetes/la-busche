@@ -1047,7 +1047,7 @@ BG:
 
 Context: Accessible label (aria-label) on the ← back button in the About page header that returns to Home.
 EN: `Back to home`
-BG: `Назад към началото`
+BG: `Назад към началната страница`
 
 ---
 
@@ -1055,7 +1055,7 @@ BG: `Назад към началото`
 
 Context: Opening paragraph on the About page, shown directly below the brand header.
 EN: `A personal Sofia public transport app, built because I got tired of checking the stops in Google Maps.`
-BG: `Лично приложение за градския транспорт в София, направено защото се изморих да проверявам спирките в Google Maps.`
+BG: `Лично приложение за градския транспорт в София, направено, защото ми омръзна да проверявам спирките в Google Maps.`
 
 ---
 
@@ -1071,7 +1071,7 @@ BG: `Какво прави`
 
 Context: Body text of the "What it does" section on the About page.
 EN: `Shows live and scheduled departures for stops you care about, organised into From Home and To Home views. You configure your own stops once, and it just works. No account. No ads. No data collected.`
-BG: `Показва пристигания на живо и по разписание за спирките, които те интересуват, наредени в изгледи „От вкъщи" и „Към вкъщи". Настройваш спирките си веднъж — и работи. Без акаунт. Без реклами. Без събиране на данни.`
+BG: `Показва виртуални табла с добавени закъснения или подранявания на живо и по разписание за спирките, които те интересуват, подредени в изгледи „От вкъщи“ и „Към вкъщи“. Настройваш спирките си веднъж — и после просто работи. Без акаунт. Без реклами. Без събиране на данни.`
 
 ---
 
@@ -1087,7 +1087,7 @@ BG: `Данни`
 
 Context: Body text of the "Data" section describing the data source and licence.
 EN: `Transit data is provided by Sofia Urban Mobility Center under Creative Commons Attribution 4.0 International (CC BY 4.0).`
-BG: `Данните за транспорта са предоставени от Център за градска мобилност, София по лиценз Creative Commons Признание 4.0 Международен (CC BY 4.0).`
+BG: `Данните за транспорта са предоставени от Центъра за градска мобилност — София под лиценз Creative Commons Признание 4.0 Международен (CC BY 4.0).`
 
 ---
 
@@ -1119,7 +1119,7 @@ BG: `Отворен код`
 
 Context: Body text of the "Open source" section.
 EN: `The source code is published under the MIT License and available on GitHub. You can self-host it, fork it, or adapt it for another city's GTFS feed.`
-BG: `Изходният код е публикуван под лиценз MIT и е достъпен в GitHub. Можеш да го хостваш сам, да го разклониш или да го адаптираш за GTFS данни на друг град.`
+BG: `Изходният код е публикуван под лиценз MIT и е достъпен в GitHub. Можеш да го хостваш сам, да го разклониш или да го адаптираш за GTFS данните на друг град.`
 
 ---
 
@@ -1135,7 +1135,7 @@ BG: `→ github.com/coldkubernetes/la-busche`
 
 Context: Section heading for the disclaimer block on the About page.
 EN: `Disclaimer`
-BG: `Отказ от отговорност`
+BG: `Важно уточнение`
 
 ---
 
@@ -1143,7 +1143,7 @@ BG: `Отказ от отговорност`
 
 Context: Body text of the "Disclaimer" section.
 EN: `This app is provided as-is, with no warranty of any kind. Departure times depend on open data feeds that may be delayed, incomplete, or temporarily unavailable. Don't use this as your only source of truth when timing matters.`
-BG: `Приложението се предоставя „такова, каквото е", без никаква гаранция. Времената на тръгване зависят от отворени данни, които може да са забавени, непълни или временно недостъпни. Не го използвай като единствен ориентир, когато времето е от значение.`
+BG: `Приложението се предоставя „такова, каквото е“, без никаква гаранция. Времената на тръгване зависят от отворени данни, които може да са забавени, непълни или временно недостъпни. Не разчитай на него като единствен ориентир, когато времето е важно.`
 
 ---
 
