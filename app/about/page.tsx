@@ -1,11 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 
 export default function AboutPage() {
   const { t } = useTranslation();
+  const [email, setEmail] = useState('');
+  // Assembled client-side only — absent from SSR HTML, invisible to scrapers
+  useEffect(() => {
+    setEmail('la-busche' + String.fromCharCode(64) + 'almostuseful.net');
+  }, []);
 
   return (
     <main
@@ -83,13 +88,7 @@ export default function AboutPage() {
         <Divider />
 
         <Section title={t('about.section.contact')}>
-          {/* Email rendered in reverse with RTL override — reads correctly in browser, not parseable by scrapers */}
-          <p
-            className="text-sm text-[#8080cc] font-mono select-all"
-            style={{ direction: 'rtl', unicodeBidi: 'bidi-override' }}
-          >
-            ten.lufesutsomal@ehcsub-al
-          </p>
+          <p className="text-sm text-[#8080cc] font-mono select-all">{email}</p>
         </Section>
       </div>
     </main>
