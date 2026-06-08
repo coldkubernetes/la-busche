@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #0c0c16;
+  color: #f0f0ff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text size adjustment on mobile */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/*
+ * Desktop wrapper (md and up). The app stays mobile-first: none of this
+ * applies below 768px, so the mobile experience is untouched. On wider
+ * viewports the backdrop sits behind the centered mobile shell and shows a
+ * subtle indigo dot pattern matching the app palette.
+ */
+@media (min-width: 768px) {
+  .desktop-backdrop {
+    background-color: #08080f;
+    background-image: radial-gradient(
+      rgba(99, 102, 241, 0.07) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+    background-position: -11px -11px;
+  }
+}
