@@ -196,7 +196,7 @@ export default function HomePage() {
         </p>
         <Link
           href="/about"
-          className="text-[0.6rem] text-[#333366] hover:text-[#7777bb] tracking-widest uppercase font-semibold mt-1 block transition-colors"
+          className="text-[0.6rem] text-[#555577] hover:text-[#7777bb] tracking-widest uppercase font-semibold mt-1 block transition-colors"
         >
           About · Open Source · CC BY 4.0
         </Link>

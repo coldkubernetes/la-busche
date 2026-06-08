@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { initConfig } from '@/lib/tile-config';
 import { useTranslation, setLanguage } from '@/lib/i18n';
@@ -117,6 +118,12 @@ export function Welcome({ mode, onDismiss }: { mode: WelcomeMode; onDismiss?: ()
             >
               {t('welcome.skip')}
             </button>
+            <Link
+              href="/about"
+              className="text-[0.65rem] text-[#555577] hover:text-[#8888bb] tracking-widest uppercase font-semibold transition-colors"
+            >
+              About · Open Source · CC BY 4.0
+            </Link>
           </div>
         ) : (
           <button
