@@ -6,6 +6,12 @@ APP_NAME=la-busche
 
 cd "$APP_DIR"
 
+if [ ! -f .env.local ]; then
+  echo "[warn] .env.local not found — NEXT_PUBLIC_* vars will be empty in the build."
+  echo "       Copy .env.example to .env.local and set NEXT_PUBLIC_BASE_PATH and the Dropbox key."
+  exit 1
+fi
+
 echo "==> Pulling latest changes"
 git pull origin main
 
