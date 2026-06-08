@@ -25,6 +25,22 @@ export const en = {
   'welcome.about': 'About',
   'welcome.language_note': 'Available in English and Bulgarian',
 
+  // About page
+  'about.back.aria': 'Back to home',
+  'about.intro': 'A personal Sofia public transport app, built because I got tired of checking the stops in Google Maps.',
+  'about.section.what': 'What it does',
+  'about.what.body': 'Shows live and scheduled departures for stops you care about, organised into From Home and To Home views. You configure your own stops once, and it just works. No account. No ads. No data collected.',
+  'about.section.data': 'Data',
+  'about.data.body': 'Transit data is provided by Sofia Urban Mobility Center under Creative Commons Attribution 4.0 International (CC BY 4.0).',
+  'about.data.source': 'Source: gtfs.sofiatraffic.bg',
+  'about.data.license': 'License: creativecommons.org/licenses/by/4.0',
+  'about.section.opensource': 'Open source',
+  'about.opensource.body': "The source code is published under the MIT License and available on GitHub. You can self-host it, fork it, or adapt it for another city's GTFS feed.",
+  'about.opensource.link': '→ github.com/coldkubernetes/la-busche',
+  'about.section.disclaimer': 'Disclaimer',
+  'about.disclaimer.body': "This app is provided as-is, with no warranty of any kind. Departure times depend on open data feeds that may be delayed, incomplete, or temporarily unavailable. Don't use this as your only source of truth when timing matters.",
+  'about.section.contact': 'Contact',
+
   // Loading states
   'loading.cold_start': 'Fetching transit data…',
   'loading.arrivals': 'Getting arrivals…',

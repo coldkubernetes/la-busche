@@ -2,8 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useTranslation } from '@/lib/i18n';
 
 export default function AboutPage() {
+  const { t } = useTranslation();
+
   return (
     <main
       className="min-h-screen bg-[#0c0c16] flex flex-col px-5"
@@ -16,7 +19,7 @@ export default function AboutPage() {
       <div className="flex items-center gap-3 mb-8">
         <Link
           href="/"
-          aria-label="Back to home"
+          aria-label={t('about.back.aria')}
           className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#13131f] border border-[#1e1e30] text-[#8888cc] text-lg hover:text-white hover:border-[#3333aa] active:scale-95 transition-all duration-100"
         >
           ←
@@ -35,55 +38,51 @@ export default function AboutPage() {
       {/* Content */}
       <div className="w-full max-w-md mx-auto flex flex-col">
         <p className="text-sm text-[#9090cc] leading-relaxed mb-6">
-          A personal Sofia public transport app, built because I got tired of checking the stops in Google Maps.
+          {t('about.intro')}
         </p>
 
         <Divider />
 
-        <Section title="What it does">
+        <Section title={t('about.section.what')}>
           <p className="text-sm text-[#8080cc] leading-relaxed">
-            Shows live and scheduled departures for stops you care about, organised into From Home and To Home views.
-            You configure your own stops once, and it just works. No account. No ads. No data collected.
+            {t('about.what.body')}
           </p>
         </Section>
 
         <Divider />
 
-        <Section title="Data">
+        <Section title={t('about.section.data')}>
           <p className="text-sm text-[#8080cc] leading-relaxed mb-3">
-            Transit data is provided by Sofia Urban Mobility Center under Creative Commons Attribution 4.0 International (CC BY 4.0).
+            {t('about.data.body')}
           </p>
           <div className="text-xs text-[#555577] font-mono leading-relaxed">
-            <p>Source: gtfs.sofiatraffic.bg</p>
-            <p>License: creativecommons.org/licenses/by/4.0</p>
+            <p>{t('about.data.source')}</p>
+            <p>{t('about.data.license')}</p>
           </div>
         </Section>
 
         <Divider />
 
-        <Section title="Open source">
+        <Section title={t('about.section.opensource')}>
           <p className="text-sm text-[#8080cc] leading-relaxed mb-3">
-            The source code is published under the MIT License and available on GitHub.
-            You can self-host it, fork it, or adapt it for another city's GTFS feed.
+            {t('about.opensource.body')}
           </p>
           <p className="text-xs text-[#555577] font-mono">
-            → github.com/coldkubernetes/la-busche
+            {t('about.opensource.link')}
           </p>
         </Section>
 
         <Divider />
 
-        <Section title="Disclaimer">
+        <Section title={t('about.section.disclaimer')}>
           <p className="text-sm text-[#8080cc] leading-relaxed">
-            This app is provided as-is, with no warranty of any kind. Departure times depend on open data
-            feeds that may be delayed, incomplete, or temporarily unavailable. Don't use this as your only
-            source of truth when timing matters.
+            {t('about.disclaimer.body')}
           </p>
         </Section>
 
         <Divider />
 
-        <Section title="Contact">
+        <Section title={t('about.section.contact')}>
           {/* Email rendered in reverse with RTL override — reads correctly in browser, not parseable by scrapers */}
           <p
             className="text-sm text-[#8080cc] font-mono select-all"

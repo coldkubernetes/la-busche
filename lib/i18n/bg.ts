@@ -27,6 +27,22 @@ export const bg: Partial<Record<TranslationKey, string>> = {
   'welcome.about': 'За приложението',
   'welcome.language_note': 'Достъпно на английски и на български',
 
+  // About page
+  'about.back.aria': 'Назад към началото',
+  'about.intro': 'Лично приложение за градския транспорт в София, направено защото се изморих да проверявам спирките в Google Maps.',
+  'about.section.what': 'Какво прави',
+  'about.what.body': 'Показва пристигания на живо и по разписание за спирките, които те интересуват, наредени в изгледи „От вкъщи" и „Към вкъщи". Настройваш спирките си веднъж — и работи. Без акаунт. Без реклами. Без събиране на данни.',
+  'about.section.data': 'Данни',
+  'about.data.body': 'Данните за транспорта са предоставени от Център за градска мобилност, София по лиценз Creative Commons Признание 4.0 Международен (CC BY 4.0).',
+  'about.data.source': 'Източник: gtfs.sofiatraffic.bg',
+  'about.data.license': 'Лиценз: creativecommons.org/licenses/by/4.0',
+  'about.section.opensource': 'Отворен код',
+  'about.opensource.body': 'Изходният код е публикуван под лиценз MIT и е достъпен в GitHub. Можеш да го хостваш сам, да го разклониш или да го адаптираш за GTFS данни на друг град.',
+  'about.opensource.link': '→ github.com/coldkubernetes/la-busche',
+  'about.section.disclaimer': 'Отказ от отговорност',
+  'about.disclaimer.body': 'Приложението се предоставя „такова, каквото е", без никаква гаранция. Времената на тръгване зависят от отворени данни, които може да са забавени, непълни или временно недостъпни. Не го използвай като единствен ориентир, когато времето е от значение.',
+  'about.section.contact': 'Контакт',
+
   // Loading states
   'loading.cold_start': 'Зареждам данните за транспорта…',
   'loading.arrivals': 'Зареждам пристиганията…',
