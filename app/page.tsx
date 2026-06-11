@@ -21,6 +21,8 @@ const STATUS_MAX_ATTEMPTS = 30;
 const SPLASH_MIN_MS = 1200;
 const SPLASH_MAX_MS = 2500;
 
+const SPLASH_KEY = 'la-busche:splash-shown';
+
 function getDefaultTab(): Tab {
   const hour = new Date().getHours();
   // Morning (5–11): you're leaving home
@@ -35,14 +37,23 @@ export default function HomePage() {
   const [showWelcome, setShowWelcome] = useState(false);
   // null = still checking; false = cold start in progress; true = ready/cached.
   const [gtfsReady, setGtfsReady] = useState<boolean | null>(null);
+  // Skip the splash if it has already been shown this browser session.
   const [splashDone, setSplashDone] = useState(false);
   const [splashMinElapsed, setSplashMinElapsed] = useState(false);
 
   // Splash timing: hold for at least SPLASH_MIN_MS, end as soon as GTFS is
   // ready after that, and never run past SPLASH_MAX_MS.
+  // Skipped entirely on back-navigation (sessionStorage flag set after first show).
   useEffect(() => {
+    if (sessionStorage.getItem(SPLASH_KEY)) {
+      setSplashDone(true);
+      return;
+    }
     const min = setTimeout(() => setSplashMinElapsed(true), SPLASH_MIN_MS);
-    const max = setTimeout(() => setSplashDone(true), SPLASH_MAX_MS);
+    const max = setTimeout(() => {
+      sessionStorage.setItem(SPLASH_KEY, '1');
+      setSplashDone(true);
+    }, SPLASH_MAX_MS);
     return () => {
       clearTimeout(min);
       clearTimeout(max);
@@ -50,7 +61,10 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (splashMinElapsed && gtfsReady === true) setSplashDone(true);
+    if (splashMinElapsed && gtfsReady === true) {
+      sessionStorage.setItem(SPLASH_KEY, '1');
+      setSplashDone(true);
+    }
   }, [splashMinElapsed, gtfsReady]);
 
   // Cold start: only show the full-screen loader when the static GTFS data
