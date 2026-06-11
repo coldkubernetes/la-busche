@@ -3,10 +3,6 @@ import Papa from 'papaparse';
 
 const STATIC_GTFS_URL = 'https://gtfs.sofiatraffic.bg/api/v1/static';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-// Past the TTL we keep serving the stale schedule and refresh in the
-// background (realtime delays are fetched fresh per request regardless).
-// Past the hard TTL the schedule is too old to trust and we block on a fetch.
-const HARD_TTL_MS = 48 * 60 * 60 * 1000;
 
 export interface Stop {
   stop_id: string;
@@ -71,34 +67,19 @@ export async function getStaticGtfs(): Promise<GtfsStaticData> {
   if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
     return cache.data;
   }
-
-  // Stale but within the hard TTL: serve the old schedule immediately and
-  // kick off a background refresh so nobody blocks on the daily update.
-  // Realtime delays are unaffected — they are fetched fresh per request.
-  if (cache && Date.now() - cache.fetchedAt < HARD_TTL_MS) {
-    void startFetch();
-    return cache.data;
-  }
-
-  return startFetch();
-}
-
-function startFetch(): Promise<GtfsStaticData> {
   if (fetchPromise) return fetchPromise;
+
+  // Stale or empty. This box can only fit one copy of the ~341MB dataset in
+  // heap, so we must NOT build a new copy while the old one is still
+  // referenced (that doubles memory and OOM-kills the process). Drop the old
+  // copy first; requests during the short rebuild wait on the same promise.
+  // Realtime delays are fetched fresh per request, so live times stay current.
+  cache = null;
   fetchPromise = (async () => {
     try {
       const data = await fetchAndParse();
       cache = { data, fetchedAt: Date.now() };
       return data;
-    } catch (err) {
-      if (cache) {
-        console.warn(
-          '[GTFS static] Refresh failed, serving stale data:',
-          err instanceof Error ? err.message : err
-        );
-        return cache.data;
-      }
-      throw err;
     } finally {
       fetchPromise = null;
     }
@@ -106,14 +87,14 @@ function startFetch(): Promise<GtfsStaticData> {
   return fetchPromise;
 }
 
-/** True when static GTFS data is available to serve (fresh or stale-but-usable). */
+/** True when the static GTFS data is parsed and still within its cache TTL. */
 export function isStaticGtfsReady(): boolean {
-  return cache !== null && Date.now() - cache.fetchedAt < HARD_TTL_MS;
+  return cache !== null && Date.now() - cache.fetchedAt < CACHE_TTL_MS;
 }
 
 /**
  * Kick off the static GTFS fetch/parse without blocking the caller. Safe to
- * call repeatedly — startFetch dedupes concurrent loads via fetchPromise.
+ * call repeatedly — getStaticGtfs dedupes concurrent loads via fetchPromise.
  */
 export function warmStaticGtfs(): void {
   if (isStaticGtfsReady()) return;

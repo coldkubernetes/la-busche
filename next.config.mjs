@@ -8,7 +8,6 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ['adm-zip', 'papaparse'],
-    instrumentationHook: true,
   },
 };
 
