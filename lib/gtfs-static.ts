@@ -1,8 +1,5 @@
 import AdmZip from 'adm-zip';
 import Papa from 'papaparse';
-import { promises as fs } from 'fs';
-import path from 'path';
-import os from 'os';
 
 const STATIC_GTFS_URL = 'https://gtfs.sofiatraffic.bg/api/v1/static';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -69,34 +66,18 @@ export interface GtfsStaticData {
 
 let cache: { data: GtfsStaticData; fetchedAt: number } | null = null;
 let fetchPromise: Promise<GtfsStaticData> | null = null;
-let diskLoadPromise: Promise<void> | null = null;
 
 export async function getStaticGtfs(): Promise<GtfsStaticData> {
   if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
     return cache.data;
   }
 
-  // No in-memory cache yet (fresh process): try the disk cache before
-  // downloading — a restart shouldn't cost a full re-fetch and re-parse.
-  if (!cache) {
-    if (!diskLoadPromise) {
-      diskLoadPromise = loadFromDisk().then((loaded) => {
-        if (loaded && !cache) cache = loaded;
-      });
-    }
-    await diskLoadPromise;
-  }
-
-  const current = cache;
-  if (current && Date.now() - current.fetchedAt < CACHE_TTL_MS) {
-    return current.data;
-  }
-
   // Stale but within the hard TTL: serve the old schedule immediately and
-  // refresh in the background so nobody blocks on the daily update.
-  if (current && Date.now() - current.fetchedAt < HARD_TTL_MS) {
-    startFetch();
-    return current.data;
+  // kick off a background refresh so nobody blocks on the daily update.
+  // Realtime delays are unaffected — they are fetched fresh per request.
+  if (cache && Date.now() - cache.fetchedAt < HARD_TTL_MS) {
+    void startFetch();
+    return cache.data;
   }
 
   return startFetch();
@@ -108,11 +89,8 @@ function startFetch(): Promise<GtfsStaticData> {
     try {
       const data = await fetchAndParse();
       cache = { data, fetchedAt: Date.now() };
-      void saveToDisk(data, cache.fetchedAt);
       return data;
     } catch (err) {
-      // Background refresh failed but we still have a usable stale cache —
-      // keep serving it and let the next request retry the fetch.
       if (cache) {
         console.warn(
           '[GTFS static] Refresh failed, serving stale data:',
@@ -135,7 +113,7 @@ export function isStaticGtfsReady(): boolean {
 
 /**
  * Kick off the static GTFS fetch/parse without blocking the caller. Safe to
- * call repeatedly — getStaticGtfs dedupes concurrent loads via fetchPromise.
+ * call repeatedly — startFetch dedupes concurrent loads via fetchPromise.
  */
 export function warmStaticGtfs(): void {
   if (isStaticGtfsReady()) return;
@@ -291,75 +269,6 @@ async function fetchAndParse(): Promise<GtfsStaticData> {
     stopHeadsigns,
     stopLineCounts,
   };
-}
-
-// --- Disk cache: lets a restarted server skip the download + parse ---
-
-const DISK_CACHE_VERSION = 1;
-const DISK_CACHE_PATH = path.join(os.tmpdir(), 'la-busche-gtfs-static.json');
-
-interface DiskCacheFile {
-  version: number;
-  fetchedAt: number;
-  stops: [string, Stop][];
-  routes: [string, Route][];
-  trips: [string, Trip][];
-  stopTimesByStop: [string, StopTime[]][];
-  calendar: [string, CalendarEntry][];
-  calendarDates: [string, CalendarDate[]][];
-  stopHeadsigns: [string, string[]][];
-  stopLineCounts: [string, number][];
-}
-
-async function saveToDisk(data: GtfsStaticData, fetchedAt: number): Promise<void> {
-  try {
-    const file: DiskCacheFile = {
-      version: DISK_CACHE_VERSION,
-      fetchedAt,
-      stops: Array.from(data.stops.entries()),
-      routes: Array.from(data.routes.entries()),
-      trips: Array.from(data.trips.entries()),
-      stopTimesByStop: Array.from(data.stopTimesByStop.entries()),
-      calendar: Array.from(data.calendar.entries()),
-      calendarDates: Array.from(data.calendarDates.entries()),
-      stopHeadsigns: Array.from(data.stopHeadsigns.entries()),
-      stopLineCounts: Array.from(data.stopLineCounts.entries()),
-    };
-    // Write to a temp file then rename so a crash mid-write can't leave a
-    // truncated cache behind.
-    const tmpPath = `${DISK_CACHE_PATH}.${process.pid}.tmp`;
-    await fs.writeFile(tmpPath, JSON.stringify(file));
-    await fs.rename(tmpPath, DISK_CACHE_PATH);
-    console.log('[GTFS static] Disk cache written to', DISK_CACHE_PATH);
-  } catch (err) {
-    console.warn('[GTFS static] Disk cache write failed:', err instanceof Error ? err.message : err);
-  }
-}
-
-async function loadFromDisk(): Promise<{ data: GtfsStaticData; fetchedAt: number } | null> {
-  try {
-    const raw = await fs.readFile(DISK_CACHE_PATH, 'utf8');
-    const file = JSON.parse(raw) as DiskCacheFile;
-    if (file.version !== DISK_CACHE_VERSION) return null;
-    if (Date.now() - file.fetchedAt >= HARD_TTL_MS) return null;
-    const data: GtfsStaticData = {
-      stops: new Map(file.stops),
-      routes: new Map(file.routes),
-      trips: new Map(file.trips),
-      stopTimesByStop: new Map(file.stopTimesByStop),
-      calendar: new Map(file.calendar),
-      calendarDates: new Map(file.calendarDates),
-      stopHeadsigns: new Map(file.stopHeadsigns),
-      stopLineCounts: new Map(file.stopLineCounts),
-    };
-    console.log(
-      `[GTFS static] Loaded from disk cache (age ${Math.round((Date.now() - file.fetchedAt) / 60000)} min)`
-    );
-    return { data, fetchedAt: file.fetchedAt };
-  } catch {
-    // Missing or corrupt cache file — fall through to a network fetch.
-    return null;
-  }
 }
 
 function parseFile<T>(zip: AdmZip, filename: string, onRow: (row: T) => void): void {
