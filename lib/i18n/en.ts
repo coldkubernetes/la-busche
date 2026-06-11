@@ -42,7 +42,7 @@ export const en = {
   'about.section.contact': 'Contact',
 
   // Loading states
-  'loading.cold_start': 'Fetching transit data…',
+  'loading.cold_start': 'Fetching transit data… this may take a moment on first start.',
   'loading.arrivals': 'Getting arrivals…',
 
   // Home screen

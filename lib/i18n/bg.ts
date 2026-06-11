@@ -44,7 +44,7 @@ export const bg: Partial<Record<TranslationKey, string>> = {
   'about.section.contact': 'Контакт',
 
   // Loading states
-  'loading.cold_start': 'Зареждам данните за транспорта…',
+  'loading.cold_start': 'Зареждане на транспортни данни… при първо стартиране може да отнеме малко повече.',
   'loading.arrivals': 'Зареждам пристиганията…',
 
   // Home screen

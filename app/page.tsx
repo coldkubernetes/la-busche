@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { loadConfig, STORAGE_KEY, type TileConfig } from '@/lib/tile-config';
 import { useTranslation } from '@/lib/i18n';
 import { Welcome } from './Welcome';
-import { BrandLoading } from './BrandLoading';
 
 type Tab = 'from_home' | 'to_home';
 
@@ -94,13 +93,6 @@ export default function HomePage() {
     return <Welcome mode="firstRun" onDismiss={handleWelcomeDismiss} />;
   }
 
-  // Cold start in progress: the static GTFS data is being fetched/parsed on the
-  // server. Show a branded full-screen loader instead of tiles that couldn't
-  // load arrivals yet.
-  if (gtfsReady === false) {
-    return <BrandLoading fullScreen message={t('loading.cold_start')} />;
-  }
-
   const visibleTiles = tiles.filter((t) => t.category === tab);
   const isFromHome = tab === 'from_home';
 
@@ -155,7 +147,7 @@ export default function HomePage() {
       </div>
 
       {/* Tiles */}
-      {!mounted || gtfsReady !== true ? (
+      {!mounted ? (
         <div className="grid grid-cols-2 gap-3">
           {[1, 2].map((i) => (
             <div
@@ -188,6 +180,13 @@ export default function HomePage() {
             <TileCard key={tile.tileId} tile={tile} />
           ))}
         </div>
+      )}
+
+      {/* Subtle non-blocking hint while GTFS warms up in the background */}
+      {mounted && gtfsReady === false && (
+        <p className="mt-4 text-center text-[0.65rem] text-[#444466] tracking-wide animate-pulse">
+          {t('loading.cold_start')}
+        </p>
       )}
 
       <footer className="mt-8 text-center">
