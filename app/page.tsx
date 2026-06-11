@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { loadConfig, STORAGE_KEY, type TileConfig } from '@/lib/tile-config';
 import { useTranslation } from '@/lib/i18n';
 import { Welcome } from './Welcome';
+import { BrandLoading } from './BrandLoading';
 
 type Tab = 'from_home' | 'to_home';
 
@@ -13,6 +14,12 @@ type Tab = 'from_home' | 'to_home';
 // the per-tile arrival board has its own error handling).
 const STATUS_POLL_MS = 1500;
 const STATUS_MAX_ATTEMPTS = 30;
+
+// Branded splash on open: shown at least SPLASH_MIN_MS so it doesn't flash,
+// and at most SPLASH_MAX_MS — it buys the GTFS warm-up a moment, but tiles
+// render regardless once it ends (the subtle hint covers longer warm-ups).
+const SPLASH_MIN_MS = 1200;
+const SPLASH_MAX_MS = 2500;
 
 function getDefaultTab(): Tab {
   const hour = new Date().getHours();
@@ -28,6 +35,23 @@ export default function HomePage() {
   const [showWelcome, setShowWelcome] = useState(false);
   // null = still checking; false = cold start in progress; true = ready/cached.
   const [gtfsReady, setGtfsReady] = useState<boolean | null>(null);
+  const [splashDone, setSplashDone] = useState(false);
+  const [splashMinElapsed, setSplashMinElapsed] = useState(false);
+
+  // Splash timing: hold for at least SPLASH_MIN_MS, end as soon as GTFS is
+  // ready after that, and never run past SPLASH_MAX_MS.
+  useEffect(() => {
+    const min = setTimeout(() => setSplashMinElapsed(true), SPLASH_MIN_MS);
+    const max = setTimeout(() => setSplashDone(true), SPLASH_MAX_MS);
+    return () => {
+      clearTimeout(min);
+      clearTimeout(max);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (splashMinElapsed && gtfsReady === true) setSplashDone(true);
+  }, [splashMinElapsed, gtfsReady]);
 
   // Cold start: only show the full-screen loader when the static GTFS data
   // isn't cached yet. When it's already warm the first probe returns ready and
@@ -93,6 +117,16 @@ export default function HomePage() {
     return <Welcome mode="firstRun" onDismiss={handleWelcomeDismiss} />;
   }
 
+  // Branded splash for returning users while the app settles.
+  if (!mounted || !splashDone) {
+    return (
+      <BrandLoading
+        fullScreen
+        message={gtfsReady === false ? t('loading.cold_start') : t('app.tagline')}
+      />
+    );
+  }
+
   const visibleTiles = tiles.filter((t) => t.category === tab);
   const isFromHome = tab === 'from_home';
 
@@ -147,17 +181,7 @@ export default function HomePage() {
       </div>
 
       {/* Tiles */}
-      {!mounted ? (
-        <div className="grid grid-cols-2 gap-3">
-          {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-[128px] rounded-2xl bg-[#13131f] border border-[#1a1a2a] animate-pulse"
-              style={{ opacity: 1 - i * 0.3 }}
-            />
-          ))}
-        </div>
-      ) : visibleTiles.length === 0 ? (
+      {visibleTiles.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-14">
           <span className="text-5xl mb-4">{isFromHome ? '🏠' : '🏡'}</span>
           <h2 className="text-lg font-black text-white mb-2">
@@ -183,7 +207,7 @@ export default function HomePage() {
       )}
 
       {/* Subtle non-blocking hint while GTFS warms up in the background */}
-      {mounted && gtfsReady === false && (
+      {gtfsReady === false && (
         <p className="mt-4 text-center text-[0.65rem] text-[#444466] tracking-wide animate-pulse">
           {t('loading.cold_start')}
         </p>
