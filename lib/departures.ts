@@ -185,10 +185,10 @@ export function computeDepartures(
 
     const tripUpdate = tripUpdates.get(st.trip_id);
     if (tripUpdate) {
-      // GTFS-RT may use either the internal stop_id ("A2327") or the stop_code ("2327")
-      const stopUpdate =
-        tripUpdate.stopUpdates.get(stopId) ??
-        tripUpdate.stopUpdates.get('A' + stopId);
+      // The realtime feed is indexed by both its mode-prefixed id and the bare
+      // stop_code (see fetchTripUpdates), so a plain stop_code lookup works for
+      // bus, trolleybus and tram alike.
+      const stopUpdate = tripUpdate.stopUpdates.get(stopId);
       if (stopUpdate) {
         if (stopUpdate.time != null && stopUpdate.time > 0) {
           estimatedEpoch = stopUpdate.time;

@@ -37,10 +37,19 @@ export async function fetchTripUpdates(): Promise<Map<string, TripUpdateInfo>> {
       if (!stopId) continue;
 
       const arrival = stu.arrival;
-      stopUpdates.set(stopId, {
+      const info: StopUpdateInfo = {
         delay: arrival?.delay != null ? toLong(arrival.delay) : null,
         time: arrival?.time != null ? toLong(arrival.time) : null,
-      });
+      };
+
+      // Sofia's realtime feed keys stops by a mode-prefixed internal id:
+      // bus "A0206", trolleybus "TB0206", tram "TM2260". The static schedule
+      // (and the rest of this app) keys stops by the bare 4-digit stop_code
+      // ("0206"). Index by both the raw id and the numeric code so a lookup by
+      // stop_code matches every mode — not just buses (the old "A"+code path).
+      stopUpdates.set(stopId, info);
+      const stopCode = stopId.replace(/^\D+/, '');
+      if (stopCode && stopCode !== stopId) stopUpdates.set(stopCode, info);
     }
 
     result.set(tripId, { tripId, stopUpdates });
