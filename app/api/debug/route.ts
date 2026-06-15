@@ -28,12 +28,12 @@ export async function GET(req: Request) {
       let vehiclePositionCount = 0;
       for (const e of feed.entity) {
         if (e.tripUpdate) tripUpdateCount++;
-        if (e.vehiclePosition) vehiclePositionCount++;
+        if (e.vehicle) vehiclePositionCount++;
       }
       const sampleParsed = sample.map(e => ({
         id: e.id,
         hasTripUpdate: !!e.tripUpdate,
-        hasVehiclePosition: !!e.vehiclePosition,
+        hasVehiclePosition: !!e.vehicle,
         tripUpdate: e.tripUpdate ? {
           tripId: e.tripUpdate.trip?.tripId,
           routeId: e.tripUpdate.trip?.routeId,
@@ -45,13 +45,13 @@ export async function GET(req: Request) {
             departureDelay: toLong(s.departure?.delay),
           })),
         } : null,
-        vehiclePosition: e.vehiclePosition ? {
-          tripId: e.vehiclePosition.trip?.tripId,
-          routeId: e.vehiclePosition.trip?.routeId,
-          stopId: e.vehiclePosition.stopId,
-          currentStopSequence: e.vehiclePosition.currentStopSequence,
-          lat: e.vehiclePosition.position?.latitude,
-          lng: e.vehiclePosition.position?.longitude,
+        vehiclePosition: e.vehicle ? {
+          tripId: e.vehicle.trip?.tripId,
+          routeId: e.vehicle.trip?.routeId,
+          stopId: e.vehicle.stopId,
+          currentStopSequence: e.vehicle.currentStopSequence,
+          lat: e.vehicle.position?.latitude,
+          lng: e.vehicle.position?.longitude,
         } : null,
       }));
       return { total, tripUpdateCount, vehiclePositionCount, sample: sampleParsed };
