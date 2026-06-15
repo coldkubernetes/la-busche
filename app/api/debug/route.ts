@@ -107,15 +107,52 @@ export async function GET(req: Request) {
     }
   }
 
+  // --- Dump realtime trips for a given route_id, with full stop-update sequences ---
+  async function dumpTripsForRoute(feedUrl: string, routeId: string | undefined) {
+    if (!routeId) return { error: 'no routeId resolved for line' };
+    try {
+      const res = await fetch(feedUrl, { cache: 'no-store' });
+      if (!res.ok) return { error: `HTTP ${res.status}` };
+      const buf = Buffer.from(await res.arrayBuffer());
+      const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buf));
+      const trips: object[] = [];
+      for (const e of feed.entity) {
+        const tu = e.tripUpdate;
+        if (!tu) continue;
+        if (tu.trip?.routeId !== routeId) continue;
+        if (trips.length >= 4) break;
+        trips.push({
+          tripId: tu.trip?.tripId,
+          startTime: tu.trip?.startTime,
+          startDate: tu.trip?.startDate,
+          scheduleRelationship: tu.trip?.scheduleRelationship,
+          stopUpdates: (tu.stopTimeUpdate ?? []).map(s => ({
+            stopId: s.stopId,
+            seq: toLong(s.stopSequence),
+            arrDelay: toLong(s.arrival?.delay),
+            arrTime: toLong(s.arrival?.time),
+            schedRel: s.scheduleRelationship,
+          })),
+        });
+      }
+      return { matchCount: trips.length, trips };
+    } catch (e) {
+      return { error: String(e) };
+    }
+  }
+
   // --- Static GTFS sample ---
   const staticRes = await fetch(STATIC_GTFS_URL, { cache: 'no-store' });
   let staticSample: object = { error: `HTTP ${staticRes.status}` };
+  let routeIdForLine: string | undefined;
+  let staticTripIdSample: string[] = [];
   if (staticRes.ok) {
     const zip = new AdmZip(Buffer.from(await staticRes.arrayBuffer()));
     const rawStops = parseFirst(zip, 'stops.txt', 5);
-    const route73 = parseFirst(zip, 'routes.txt', 9999).filter(
+    const matchingRoutes = parseFirst(zip, 'routes.txt', 9999).filter(
       (r: Record<string, string>) => r.route_short_name === line
     );
+    routeIdForLine = matchingRoutes[0]?.route_id;
 
     // Find the stop entry for our stop code
     const allStops = parseFirst(zip, 'stops.txt', 99999);
@@ -123,20 +160,33 @@ export async function GET(req: Request) {
       s => s.stop_code === stopId || s.stop_id === stopId || s.stop_id === 'A' + stopId
     );
 
-    staticSample = { rawStopsSample: rawStops, targetStop, route73 };
+    // Sample static trip_ids for this route_id (to compare format vs realtime)
+    if (routeIdForLine) {
+      const trips = parseFirst(zip, 'trips.txt', 99999).filter(
+        t => t.route_id === routeIdForLine
+      );
+      staticTripIdSample = trips.slice(0, 5).map(t => t.trip_id);
+    }
+
+    staticSample = { rawStopsSample: rawStops, targetStop, matchingRoutes, routeIdForLine, staticTripIdSample };
   }
 
-  const [tripUpdatesFeed, vehiclePositionsFeed, tripUpdatesSearch] = await Promise.all([
-    probeRtFeed(TRIP_UPDATES_URL),
-    probeRtFeed(VEHICLE_POSITIONS_URL),
-    searchForStopInTripUpdates(TRIP_UPDATES_URL),
-  ]);
+  const [tripUpdatesFeed, vehiclePositionsFeed, tripUpdatesSearch, routeTripsInTU, routeTripsInVP] =
+    await Promise.all([
+      probeRtFeed(TRIP_UPDATES_URL),
+      probeRtFeed(VEHICLE_POSITIONS_URL),
+      searchForStopInTripUpdates(TRIP_UPDATES_URL),
+      dumpTripsForRoute(TRIP_UPDATES_URL, routeIdForLine),
+      dumpTripsForRoute(VEHICLE_POSITIONS_URL, routeIdForLine),
+    ]);
 
   return NextResponse.json({
-    query: { stopId, line },
+    query: { stopId, line, routeIdForLine },
     tripUpdatesFeed,
     vehiclePositionsFeed,
     searchForStop_in_tripUpdates: tripUpdatesSearch,
+    line73_trips_in_tripUpdates: routeTripsInTU,
+    line73_trips_in_vehiclePositions: routeTripsInVP,
     staticSample,
   });
 }
