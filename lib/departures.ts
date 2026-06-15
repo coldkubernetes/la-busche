@@ -1,5 +1,5 @@
 import type { GtfsStaticData, CalendarEntry } from './gtfs-static';
-import type { TripUpdateInfo } from './gtfs-realtime';
+import type { TripUpdateInfo, StopUpdateInfo } from './gtfs-realtime';
 
 export interface Departure {
   line: string;
@@ -186,9 +186,21 @@ export function computeDepartures(
     const tripUpdate = tripUpdates.get(st.trip_id);
     if (tripUpdate) {
       // GTFS-RT may use either the internal stop_id ("A2327") or the stop_code ("2327")
-      const stopUpdate =
+      let stopUpdate: StopUpdateInfo | undefined =
         tripUpdate.stopUpdates.get(stopId) ??
         tripUpdate.stopUpdates.get('A' + stopId);
+
+      // GTFS-RT trip updates often omit stops that have no change from the propagated delay.
+      // Per the spec, the delay from the last listed stop with sequence ≤ ours applies.
+      if (!stopUpdate && tripUpdate.sequencedUpdates.length > 0) {
+        let best: StopUpdateInfo | undefined;
+        for (const su of tripUpdate.sequencedUpdates) {
+          if (su.stopSequence <= st.stop_sequence) best = su;
+          else break;
+        }
+        stopUpdate = best;
+      }
+
       if (stopUpdate) {
         if (stopUpdate.time != null && stopUpdate.time > 0) {
           estimatedEpoch = stopUpdate.time;
