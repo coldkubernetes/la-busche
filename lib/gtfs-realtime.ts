@@ -7,15 +7,9 @@ export interface StopUpdateInfo {
   time: number | null;    // unix timestamp
 }
 
-export interface SequencedStopUpdate extends StopUpdateInfo {
-  stopSequence: number;
-}
-
 export interface TripUpdateInfo {
   tripId: string;
   stopUpdates: Map<string, StopUpdateInfo>; // stop_id → update
-  // Sorted by stopSequence; used to propagate delays to stops not explicitly listed (per GTFS-RT spec)
-  sequencedUpdates: SequencedStopUpdate[];
 }
 
 export async function fetchTripUpdates(): Promise<Map<string, TripUpdateInfo>> {
@@ -37,29 +31,19 @@ export async function fetchTripUpdates(): Promise<Map<string, TripUpdateInfo>> {
     if (!tripId) continue;
 
     const stopUpdates = new Map<string, StopUpdateInfo>();
-    const sequencedUpdates: SequencedStopUpdate[] = [];
 
     for (const stu of tu.stopTimeUpdate ?? []) {
+      const stopId = stu.stopId;
+      if (!stopId) continue;
+
       const arrival = stu.arrival;
-      const update: StopUpdateInfo = {
+      stopUpdates.set(stopId, {
         delay: arrival?.delay != null ? toLong(arrival.delay) : null,
         time: arrival?.time != null ? toLong(arrival.time) : null,
-      };
-
-      const stopId = stu.stopId;
-      if (stopId) {
-        stopUpdates.set(stopId, update);
-      }
-
-      const seq = stu.stopSequence != null ? toLong(stu.stopSequence) : null;
-      if (seq != null) {
-        sequencedUpdates.push({ stopSequence: seq, ...update });
-      }
+      });
     }
 
-    sequencedUpdates.sort((a, b) => a.stopSequence - b.stopSequence);
-
-    result.set(tripId, { tripId, stopUpdates, sequencedUpdates });
+    result.set(tripId, { tripId, stopUpdates });
   }
 
   return result;
