@@ -1,9 +1,81 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
+
+const DOT_COUNT = 9;
+const TRIP_MS = 1500;
+
+function easeInOutSine(x: number) {
+  return -(Math.cos(Math.PI * x) - 1) / 2;
+}
+
+/**
+ * The bus drives across a row of dots, "eating" the ones it has already
+ * passed, then flips around and drives — and eats — back the other way.
+ */
+function BusRoad({ message }: { message: string }) {
+  const [position, setPosition] = useState(0); // 0 (left) .. 1 (right)
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const directionRef = useRef<1 | -1>(1);
+  const legStartRef = useRef<number | null>(null);
+  const rafRef = useRef<number>();
+
+  useEffect(() => {
+    function tick(now: number) {
+      if (legStartRef.current === null) legStartRef.current = now;
+      let t = (now - legStartRef.current) / TRIP_MS;
+      if (t >= 1) {
+        t = 0;
+        legStartRef.current = now;
+        directionRef.current = directionRef.current === 1 ? -1 : 1;
+        setDirection(directionRef.current);
+      }
+      const eased = easeInOutSine(t);
+      setPosition(directionRef.current === 1 ? eased : 1 - eased);
+      rafRef.current = requestAnimationFrame(tick);
+    }
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  return (
+    <div role="status" aria-live="polite" className="w-44">
+      <span className="sr-only">{message}</span>
+      <div className="relative h-6">
+        <span
+          aria-hidden="true"
+          className="absolute top-1/2 text-xl leading-none"
+          style={{
+            left: `${position * 100}%`,
+            transform: `translate(-50%, -50%) scaleX(${direction === 1 ? -1 : 1})`,
+          }}
+        >
+          🚌
+        </span>
+      </div>
+      <div className="flex items-center justify-between" aria-hidden="true">
+        {Array.from({ length: DOT_COUNT }).map((_, i) => {
+          const dotPosition = i / (DOT_COUNT - 1);
+          const eaten = direction === 1 ? position > dotPosition : position < dotPosition;
+          return (
+            <span
+              key={i}
+              className="w-1.5 h-1.5 rounded-full bg-indigo-400 transition-opacity duration-150"
+              style={{ opacity: eaten ? 0.15 : 0.8 }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /**
  * On-brand loading indicator: the La Busche wordmark, a short contextual
- * message, and a trio of gently pulsing dots. Designed to feel intentional
- * rather than like a broken/empty screen.
+ * message, and a bus driving back and forth eating the dots on the road.
+ * Designed to feel intentional rather than like a broken/empty screen.
  *
  * Used full-screen on cold start (static GTFS warming up) and inside the
  * arrival board while a departures request is in flight.
@@ -33,17 +105,8 @@ export function BrandLoading({
       {/* Contextual message */}
       <p className="text-sm text-[#8080cc] mb-5">{message}</p>
 
-      {/* Pulsing dots */}
-      <div className="flex items-center gap-1.5" role="status" aria-live="polite">
-        <span className="sr-only">{message}</span>
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="w-2 h-2 rounded-full bg-indigo-400/80 animate-pulse-soft"
-            style={{ animationDelay: `${i * 0.2}s` }}
-          />
-        ))}
-      </div>
+      {/* Bus on the road */}
+      <BusRoad message={message} />
     </div>
   );
 
