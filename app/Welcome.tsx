@@ -50,7 +50,7 @@ export function Welcome({ mode, onDismiss }: { mode: WelcomeMode; onDismiss?: ()
               'px-3 rounded-xl text-xs font-bold transition-all duration-100 active:scale-[0.97]',
               lang === l
                 ? 'bg-indigo-500/20 border border-indigo-500/40 text-indigo-200'
-                : 'text-[#555577] hover:text-[#9090cc]',
+                : 'text-[#9595d4] hover:text-white',
             ].join(' ')}
             style={{ minHeight: 36, minWidth: 44 }}
           >
@@ -72,7 +72,7 @@ export function Welcome({ mode, onDismiss }: { mode: WelcomeMode; onDismiss?: ()
         </div>
 
         {/* Tagline */}
-        <p className="text-center text-sm text-[#8080cc] mb-8">
+        <p className="text-center text-sm text-[#9595d4] mb-8">
           {t('welcome.tagline')}
         </p>
 
@@ -86,19 +86,19 @@ export function Welcome({ mode, onDismiss }: { mode: WelcomeMode; onDismiss?: ()
               <span className="text-2xl leading-none flex-shrink-0">{point.emoji}</span>
               <div className="min-w-0">
                 <p className="text-white font-bold text-sm leading-snug">{t(point.titleKey)}</p>
-                <p className="text-xs text-[#8080cc] mt-0.5 leading-relaxed">{t(point.descKey)}</p>
+                <p className="text-xs text-[#9595d4] mt-0.5 leading-relaxed">{t(point.descKey)}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Credit */}
-        <p className="text-center text-xs text-[#555577] leading-relaxed mb-3 px-2">
+        <p className="text-center text-xs text-[#9595d4] leading-relaxed mb-3 px-2">
           {t('welcome.credit')}
         </p>
 
         {/* Language availability note */}
-        <p className="text-center text-xs text-[#555577] leading-relaxed mb-8 px-2">
+        <p className="text-center text-xs text-[#9595d4] leading-relaxed mb-8 px-2">
           {t('welcome.language_note')}
         </p>
 
@@ -113,14 +113,14 @@ export function Welcome({ mode, onDismiss }: { mode: WelcomeMode; onDismiss?: ()
             </button>
             <button
               onClick={handleSkip}
-              className="text-sm font-semibold text-[#7777aa] hover:text-[#9090cc] transition-colors"
+              className="text-sm font-semibold text-[#9595d4] hover:text-white transition-colors"
               style={{ minHeight: 44 }}
             >
               {t('welcome.skip')}
             </button>
             <Link
               href="/about"
-              className="text-[0.65rem] text-[#555577] hover:text-[#8888bb] tracking-widest uppercase font-semibold transition-colors"
+              className="text-[0.65rem] text-[#9595d4] hover:text-white tracking-widest uppercase font-semibold transition-colors"
             >
               About · Open Source · CC BY 4.0
             </Link>

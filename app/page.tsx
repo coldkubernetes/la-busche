@@ -228,12 +228,12 @@ export default function HomePage() {
       )}
 
       <footer className="mt-8 text-center">
-        <p className="text-[0.6rem] text-[#333366] tracking-widest uppercase font-semibold">
+        <p className="text-[0.6rem] text-[#8888cc] tracking-widest uppercase font-semibold">
           Sofia Urban Mobility · GTFS Live Data
         </p>
         <Link
           href="/about"
-          className="text-[0.6rem] text-[#555577] hover:text-[#7777bb] tracking-widest uppercase font-semibold mt-1 block transition-colors"
+          className="text-[0.6rem] text-[#9595d4] hover:text-white tracking-widest uppercase font-semibold mt-1 block transition-colors"
         >
           About · Open Source · CC BY 4.0
         </Link>
