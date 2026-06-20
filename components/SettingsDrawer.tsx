@@ -1,8 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation, setLanguage } from '@/lib/i18n';
+import { Stream } from '@/components/stream/Stream';
+import { TAPS_TO_REVEAL, TAP_RESET_WINDOW_MS } from '@/components/stream/constants';
 
 function itemClass(active: boolean) {
   return [
@@ -24,18 +27,55 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
   const isBackup = pathname === '/setup' && view === 'backup';
   const isAbout = pathname === '/about';
 
+  // A quiet door: five taps on the menu's own empty background reveal the
+  // stream. Taps on actual items do nothing toward it. The count is per-open
+  // and ephemeral — we never remember that someone found it.
+  const [streamOpen, setStreamOpen] = useState(false);
+  const taps = useRef<{ n: number; at: number }>({ n: 0, at: 0 });
+
+  // Re-hide the door whenever the menu itself closes.
+  useEffect(() => {
+    if (!open) {
+      setStreamOpen(false);
+      taps.current = { n: 0, at: 0 };
+    }
+  }, [open]);
+
+  const onPanelPointerDown = (e: React.PointerEvent) => {
+    if (streamOpen) return;
+    // Only empty panel background counts — never a link, button, or input.
+    if ((e.target as HTMLElement).closest('a,button,input,select,[role="button"]')) {
+      return;
+    }
+    const now = Date.now();
+    const t = taps.current;
+    t.n = now - t.at > TAP_RESET_WINDOW_MS ? 1 : t.n + 1;
+    t.at = now;
+    if (t.n >= TAPS_TO_REVEAL) {
+      t.n = 0;
+      setStreamOpen(true);
+    }
+  };
+
   return (
     <>
       {open && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+          className={[
+            'fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-200',
+            streamOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
+          ].join(' ')}
           onClick={onClose}
         />
       )}
       <nav
+        onPointerDown={onPanelPointerDown}
         className={[
-          'fixed top-0 right-0 bottom-0 w-[80%] max-w-[300px] bg-[#0e0e1a] border-l border-[#1e1e30] z-50 flex flex-col transition-transform duration-200',
+          // The menu dissolves into water on reveal (opacity, not a slide), and
+          // reforms from the same place when the stream settles closed.
+          'fixed top-0 right-0 bottom-0 w-[80%] max-w-[300px] bg-[#0e0e1a] border-l border-[#1e1e30] z-50 flex flex-col transition-all duration-200',
           open ? 'translate-x-0' : 'translate-x-full',
+          streamOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
         ].join(' ')}
         style={{ paddingTop: 'max(2.4rem, env(safe-area-inset-top))' }}
       >
@@ -117,6 +157,13 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
           </Link>
         </div>
       </nav>
+
+      {/* The stream: surfaces above the dissolving menu, fades in like water. */}
+      {streamOpen && (
+        <div className="fixed inset-0 z-[60] bg-[#0c0c16] animate-[fadeIn_700ms_ease-out]">
+          <Stream onClose={() => setStreamOpen(false)} />
+        </div>
+      )}
     </>
   );
 }
