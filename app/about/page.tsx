@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
+import { BusRoad } from '@/app/BrandLoading';
 
 export default function AboutPage() {
   const { t } = useTranslation();
@@ -45,6 +46,10 @@ export default function AboutPage() {
         <p className="text-sm text-[#9595d4] leading-relaxed mb-6">
           {t('about.intro')}
         </p>
+
+        <div className="flex justify-center mb-6">
+          <BusRoad />
+        </div>
 
         <Divider />
 
