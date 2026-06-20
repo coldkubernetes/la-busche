@@ -315,6 +315,12 @@
         <div class="drawer-scroll">
 
           <div class="menu-section nav-section">
+            <button class="nav-item" id="homeNavItem">
+              <span class="icon">🏠</span> Home <span class="chev">›</span>
+            </button>
+          </div>
+
+          <div class="menu-section nav-section">
             <button class="nav-item active" data-target="routes" data-title="Setup">
               <span class="icon">🚌</span> Routes <span class="chev">›</span>
             </button>
@@ -352,7 +358,8 @@
       <ul>
         <li><span class="badge">Fixed</span> The header (Done / title / ☰) never scrolls away — it's outside the scrolling body, so the hamburger is always reachable, on any page, at any scroll position.</li>
         <li><span class="badge">Right</span> The drawer slides in from the right, matching the hamburger's position in the header.</li>
-        <li><span class="badge">4 clear sections</span> Routes and About are plain navigation rows (boxed, with a chevron). Backup is its own boxed nav row leading to a page with two distinct labeled blocks: "Dropbox sync" and "JSON file" — both backup methods, clearly split apart so neither reads as a sub-option of the other. Language is visually different on purpose: no chevron, no navigation — you pick English/Български right there in the menu and it applies immediately.</li>
+        <li><span class="badge">5 clear sections</span> Home, Routes and About are plain navigation rows (boxed, with a chevron). Backup is its own boxed nav row leading to a page with two distinct labeled blocks: "Dropbox sync" and "JSON file" — both backup methods, clearly split apart so neither reads as a sub-option of the other. Language is visually different on purpose: no chevron, no navigation — you pick English/Български right there in the menu and it applies immediately.</li>
+        <li><span class="badge">Home added</span> Home (the live tile dashboard outside Setup) is a different destination than Routes (managing saved routes inside Setup), so it gets its own row at the top of the menu — kept alongside the header's Done button, which still works as a fast one-tap exit.</li>
         <li><span class="badge">Default</span> Setup still opens straight to Routes; Backup and About are one ☰ tap away, and selecting Routes again from the menu returns you there.</li>
         <li>Try it: tap ☰, then Backup or About, then ☰ again to switch back to Routes. Try tapping Български right in the menu — no page change.</li>
       </ul>
@@ -375,6 +382,11 @@
   menuBtn.addEventListener('click', openDrawer);
   drawerClose.addEventListener('click', closeDrawer);
   overlay.addEventListener('click', closeDrawer);
+
+  document.getElementById('homeNavItem').addEventListener('click', () => {
+    closeDrawer();
+    alert('Would navigate to / (same destination as the Done button)');
+  });
 
   navItems.forEach(item => {
     item.addEventListener('click', () => {
