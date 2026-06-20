@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La Busche — Settings: hamburger v2 (clear sections, right slide)</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0;
+    background: #050509;
+    color: #f0f0ff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .stage { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .phone {
+    position: relative; width: 390px; height: 760px;
+    background: #0c0c16; border-radius: 44px; border: 1px solid #1e1e30;
+    box-shadow: 0 0 0 8px #000, 0 30px 80px rgba(0,0,0,0.6);
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 22px; background: #000; border-radius: 0 0 16px 16px; z-index: 30;
+  }
+
+  main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding-top: max(2.4rem, env(safe-area-inset-top)); }
+
+  /* ── Fixed header: hamburger always present, never scrolls away ── */
+  header {
+    padding: 0.5rem 1rem 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #1e1e30;
+    flex-shrink: 0;
+  }
+  .done-link {
+    color: #818cf8; font-weight: 700; font-size: 0.8rem;
+    min-height: 44px; display: flex; align-items: center;
+    padding: 0 0.9rem; border-radius: 0.7rem;
+    background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3);
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .done-link:hover { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.5); }
+  .done-link:active { transform: scale(0.97); }
+  header h1 { font-size: 1.125rem; font-weight: 900; color: #fff; margin: 0; }
+  .header-btn {
+    display: flex; align-items: center; justify-content: center;
+    min-width: 44px; min-height: 44px; background: none; border: none; cursor: pointer;
+  }
+  .hamburger .bars { width: 20px; height: 14px; position: relative; }
+  .hamburger .bars span { position: absolute; left: 0; right: 0; height: 2px; background: #c7c7f0; border-radius: 2px; }
+  .hamburger .bars span:nth-child(1) { top: 0; }
+  .hamburger .bars span:nth-child(2) { top: 6px; }
+  .hamburger .bars span:nth-child(3) { top: 12px; }
+
+  /* ── Body / pages ── */
+  .body { flex: 1; overflow-y: auto; padding: 1.25rem 1rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .page { display: none; flex-direction: column; gap: 0.75rem; }
+  .page.active { display: flex; }
+
+  .section-label {
+    font-size: 0.7rem; color: #555577; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.12em; margin: 0.25rem 0 0;
+  }
+
+  .btn-add {
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 1rem; border-radius: 1rem; border: 1.5px dashed rgba(99,102,241,0.4);
+    color: #818cf8; font-weight: 700; font-size: 0.875rem; background: transparent; cursor: pointer;
+  }
+  .btn-add:hover { background: rgba(99,102,241,0.05); border-color: rgba(99,102,241,0.6); }
+
+  .tile {
+    display: flex; align-items: center; gap: 0.25rem;
+    border-radius: 1rem; background: #13131f; border: 1px solid #1e1e30; min-height: 72px;
+  }
+  .tile .handle { width: 40px; display: flex; align-items: center; justify-content: center; color: #444466; flex-shrink: 0; }
+  .tile .info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0; }
+  .tile .emoji { font-size: 1.4rem; }
+  .tile .label-row { display: flex; align-items: center; gap: 0.4rem; }
+  .tile .label { font-weight: 700; font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+  .tile .dir { font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.35rem; border-radius: 0.4rem; background: rgba(99,102,241,0.2); color: #a5b4fc; }
+  .tile .dir.from-home { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+  .tile .stop { font-size: 0.7rem; color: #7777aa; margin-top: 0.1rem; }
+  .tile .actions { display: flex; flex-shrink: 0; }
+  .tile .actions button { width: 40px; height: 40px; background: none; border: none; color: #8888cc; cursor: pointer; font-size: 0.9rem; }
+
+  .empty-hint { text-align: center; padding: 0.5rem 0 0; color: #555577; font-size: 0.75rem; }
+
+  .card { padding: 1rem; border-radius: 1rem; background: #13131f; border: 1px solid #1e1e30; }
+  .card p { margin: 0; }
+  .card .muted { color: #7777aa; font-size: 0.8rem; margin-top: 0.25rem; }
+  .tiny-muted { color: #555577; font-size: 0.75rem; margin-top: 0.5rem; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .btn-ghost {
+    padding: 1rem; border-radius: 1rem; font-weight: 600; font-size: 0.875rem;
+    border: 1px solid #1e1e30; background: #13131f; color: #9090cc; cursor: pointer;
+  }
+  .btn-ghost:hover { border-color: #3333aa; color: #fff; }
+  .btn-primary-soft {
+    padding: 1rem; border-radius: 1rem; font-weight: 700; font-size: 0.875rem;
+    border: 1px solid rgba(99,102,241,0.4); background: rgba(99,102,241,0.15); color: #a5b4fc; cursor: pointer;
+  }
+
+  .backup-block { display: flex; flex-direction: column; gap: 0.6rem; }
+  .backup-block .block-title { font-weight: 700; font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 0.4rem; }
+
+  .about-card { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 2rem 1rem; gap: 0.5rem; }
+  .about-card .glyph { font-size: 2.5rem; }
+  .about-card h2 { margin: 0; font-size: 1.1rem; font-weight: 900; color: #fff; }
+  .about-card p { margin: 0; color: #8080cc; font-size: 0.8rem; line-height: 1.5; }
+  .about-card .version { font-size: 0.7rem; color: #555577; margin-top: 0.5rem; }
+
+  /* ── Drawer: slides in from the right ── */
+  .overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: 40;
+  }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+
+  .drawer {
+    position: absolute; top: 0; right: 0; bottom: 0;
+    width: 80%; max-width: 310px;
+    background: #0e0e1a;
+    border-left: 1px solid #1e1e30;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 50;
+    display: flex; flex-direction: column;
+    padding-top: max(2.4rem, env(safe-area-inset-top));
+    box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+  }
+  .drawer.open { transform: translateX(0); }
+
+  .drawer-header {
+    padding: 0 1.25rem 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #1e1e30;
+  }
+  .drawer-header span { font-weight: 900; color: #fff; font-size: 1rem; }
+  .drawer-close { color: #8080cc; font-size: 1.1rem; background: none; border: none; cursor: pointer; min-width: 36px; min-height: 36px; }
+
+  .drawer-scroll { flex: 1; overflow-y: auto; padding: 0.5rem 0 1rem; }
+
+  /* Each of the 4 items is its own clearly bounded section, not a packed list */
+  .menu-section {
+    margin: 0.6rem 0.85rem;
+    border-radius: 1rem;
+    border: 1px solid transparent;
+  }
+  .menu-section.nav-section { padding: 0; }
+  .nav-item {
+    width: 100%; display: flex; align-items: center; gap: 0.85rem;
+    padding: 0.95rem 0.9rem; border-radius: 1rem;
+    background: #13131f; border: 1px solid #1e1e30;
+    color: #d6d6f5; font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; text-align: left; font-family: inherit; min-height: 44px;
+  }
+  .nav-item:hover { border-color: #2a2a5a; }
+  .nav-item.active { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.45); color: #fff; }
+  .nav-item .icon { font-size: 1.15rem; width: 22px; text-align: center; flex-shrink: 0; }
+  .nav-item .chev { margin-left: auto; color: #444466; font-size: 0.8rem; }
+
+  .menu-section.lang-section {
+    background: #13131f; border: 1px solid #1e1e30; padding: 0.9rem;
+    display: flex; flex-direction: column; gap: 0.65rem;
+  }
+  .lang-section .lang-heading { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.9rem; color: #d6d6f5; }
+  .lang-section .lang-heading .icon { font-size: 1.15rem; width: 22px; text-align: center; }
+  .lang-toggle { display: flex; gap: 0.5rem; }
+  .lang-toggle button {
+    flex: 1; padding: 0.6rem; border-radius: 0.7rem; font-weight: 700; font-size: 0.78rem;
+    border: 1px solid #1e1e30; background: #0c0c16; color: #8080cc; cursor: pointer; min-height: 40px;
+  }
+  .lang-toggle button.active { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.5); color: #c7d2fe; }
+
+  .section-divider {
+    margin: 0.85rem 1.25rem 0.1rem;
+    font-size: 0.62rem; color: #444466; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+  }
+
+  .drawer-footer {
+    padding: 0.85rem 1.25rem; border-top: 1px solid #1e1e30; text-align: center;
+  }
+  .drawer-footer span { color: #444466; font-size: 0.65rem; letter-spacing: 0.08em; }
+
+  /* ── Notes panel ── */
+  .notes { max-width: 320px; font-size: 0.85rem; line-height: 1.55; color: #b9b9d9; }
+  .notes h2 { font-size: 1rem; color: #fff; margin: 0 0 0.5rem; }
+  .notes ul { padding-left: 1.1rem; margin: 0.5rem 0; }
+  .notes li { margin-bottom: 0.4rem; }
+  .layout-row { display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .badge {
+    display: inline-block; background: rgba(99,102,241,0.15); color: #a5b4fc;
+    border-radius: 0.4rem; padding: 0.1rem 0.4rem; font-size: 0.7rem; font-weight: 700; margin-right: 0.3rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="layout-row">
+
+    <div class="phone">
+      <div class="notch"></div>
+
+      <main>
+        <header>
+          <a href="#" class="done-link">Done</a>
+          <h1 id="headerTitle">Setup</h1>
+          <button class="header-btn hamburger" id="menuBtn" aria-label="Open menu">
+            <span class="bars"><span></span><span></span><span></span></span>
+          </button>
+        </header>
+
+        <div class="body">
+
+          <!-- ROUTES page (default) -->
+          <div class="page active" id="page-routes">
+            <button class="btn-add">＋ Add route</button>
+            <p class="section-label">Your routes</p>
+
+            <div class="tile">
+              <div class="handle">⠿</div>
+              <div class="info">
+                <span class="emoji">🏠</span>
+                <div><div class="label-row"><span class="label">Home → Work</span><span class="dir from-home">→</span></div><p class="stop">Main St &amp; 5th Ave</p></div>
+              </div>
+              <div class="actions"><button>✏️</button><button>🗑️</button></div>
+            </div>
+            <div class="tile">
+              <div class="handle">⠿</div>
+              <div class="info">
+                <span class="emoji">🏢</span>
+                <div><div class="label-row"><span class="label">Work → Home</span><span class="dir">←</span></div><p class="stop">Office Plaza</p></div>
+              </div>
+              <div class="actions"><button>✏️</button><button>🗑️</button></div>
+            </div>
+            <div class="tile">
+              <div class="handle">⠿</div>
+              <div class="info">
+                <span class="emoji">🏋️</span>
+                <div><div class="label-row"><span class="label">Gym</span><span class="dir from-home">→</span></div><p class="stop">Fitness Center</p></div>
+              </div>
+              <div class="actions"><button>✏️</button><button>🗑️</button></div>
+            </div>
+            <div class="tile">
+              <div class="handle">⠿</div>
+              <div class="info">
+                <span class="emoji">🛒</span>
+                <div><div class="label-row"><span class="label">Grocery store</span><span class="dir">←</span></div><p class="stop">Market Square</p></div>
+              </div>
+              <div class="actions"><button>✏️</button><button>🗑️</button></div>
+            </div>
+            <div class="tile">
+              <div class="handle">⠿</div>
+              <div class="info">
+                <span class="emoji">🎓</span>
+                <div><div class="label-row"><span class="label">University</span><span class="dir from-home">→</span></div><p class="stop">Campus North Gate</p></div>
+              </div>
+              <div class="actions"><button>✏️</button><button>🗑️</button></div>
+            </div>
+            <p class="empty-hint">… and as many more as you've saved — Backup stays reachable from the menu, regardless of list length.</p>
+          </div>
+
+          <!-- BACKUP page: 2 clearly separated options -->
+          <div class="page" id="page-backup">
+            <p class="section-label">Backup</p>
+
+            <div class="backup-block">
+              <p class="block-title">☁️ Dropbox sync</p>
+              <div class="card">
+                <p style="font-weight:700; color:#fff;">jane.doe@example.com</p>
+                <p class="muted">Synced 3 minutes ago</p>
+              </div>
+              <div class="grid-2">
+                <button class="btn-primary-soft">Sync now</button>
+                <button class="btn-ghost">Disconnect</button>
+              </div>
+            </div>
+
+            <div class="backup-block" style="margin-top: 0.5rem;">
+              <p class="block-title">📄 JSON file</p>
+              <div class="grid-2">
+                <button class="btn-ghost">Export JSON</button>
+                <button class="btn-ghost">Import JSON</button>
+              </div>
+              <p class="tiny-muted">Export saves all your routes to a file. Import replaces your current routes with one from a file.</p>
+            </div>
+          </div>
+
+          <!-- ABOUT page -->
+          <div class="page" id="page-about">
+            <div class="about-card">
+              <span class="glyph">🚌</span>
+              <h2>La Busche</h2>
+              <p>Your saved bus routes, one tap from your home screen.</p>
+              <p class="version">Version 1.0.0</p>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <!-- Drawer + overlay -->
+      <div class="overlay" id="overlay"></div>
+      <nav class="drawer" id="drawer">
+        <div class="drawer-header">
+          <span>Menu</span>
+          <button class="drawer-close" id="drawerClose">✕</button>
+        </div>
+        <div class="drawer-scroll">
+
+          <div class="menu-section nav-section">
+            <button class="nav-item" id="homeNavItem">
+              <span class="icon">🏠</span> Home <span class="chev">›</span>
+            </button>
+          </div>
+
+          <div class="menu-section nav-section">
+            <button class="nav-item active" data-target="routes" data-title="Setup">
+              <span class="icon">🚌</span> Routes <span class="chev">›</span>
+            </button>
+          </div>
+
+          <div class="menu-section nav-section">
+            <button class="nav-item" data-target="backup" data-title="Backup">
+              <span class="icon">📦</span> Backup <span class="chev">›</span>
+            </button>
+          </div>
+
+          <p class="section-divider">Preference</p>
+          <div class="menu-section lang-section">
+            <div class="lang-heading"><span class="icon">🌐</span> Language</div>
+            <div class="lang-toggle">
+              <button class="active" data-lang="en">English</button>
+              <button data-lang="bg">Български</button>
+            </div>
+          </div>
+
+          <p class="section-divider">Info</p>
+          <div class="menu-section nav-section">
+            <button class="nav-item" data-target="about" data-title="About">
+              <span class="icon">ℹ️</span> About <span class="chev">›</span>
+            </button>
+          </div>
+
+        </div>
+        <div class="drawer-footer"><span>LA BUSCHE</span></div>
+      </nav>
+    </div>
+
+    <div class="notes">
+      <h2>What changed &amp; why</h2>
+      <ul>
+        <li><span class="badge">Fixed</span> The header (Done / title / ☰) never scrolls away — it's outside the scrolling body, so the hamburger is always reachable, on any page, at any scroll position.</li>
+        <li><span class="badge">Right</span> The drawer slides in from the right, matching the hamburger's position in the header.</li>
+        <li><span class="badge">5 clear sections</span> Home, Routes and About are plain navigation rows (boxed, with a chevron). Backup is its own boxed nav row leading to a page with two distinct labeled blocks: "Dropbox sync" and "JSON file" — both backup methods, clearly split apart so neither reads as a sub-option of the other. Language is visually different on purpose: no chevron, no navigation — you pick English/Български right there in the menu and it applies immediately.</li>
+        <li><span class="badge">Home added</span> Home (the live tile dashboard outside Setup) is a different destination than Routes (managing saved routes inside Setup), so it gets its own row at the top of the menu — kept alongside the header's Done button, which still works as a fast one-tap exit.</li>
+        <li><span class="badge">Default</span> Setup still opens straight to Routes; Backup and About are one ☰ tap away, and selecting Routes again from the menu returns you there.</li>
+        <li>Try it: tap ☰, then Backup or About, then ☰ again to switch back to Routes. Try tapping Български right in the menu — no page change.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const drawer = document.getElementById('drawer');
+  const overlay = document.getElementById('overlay');
+  const menuBtn = document.getElementById('menuBtn');
+  const drawerClose = document.getElementById('drawerClose');
+  const headerTitle = document.getElementById('headerTitle');
+  const pages = document.querySelectorAll('.page');
+  const navItems = document.querySelectorAll('.nav-item[data-target]');
+
+  function openDrawer() { drawer.classList.add('open'); overlay.classList.add('open'); }
+  function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('open'); }
+  menuBtn.addEventListener('click', openDrawer);
+  drawerClose.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+
+  document.getElementById('homeNavItem').addEventListener('click', () => {
+    closeDrawer();
+    alert('Would navigate to / (same destination as the Done button)');
+  });
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      pages.forEach(p => p.classList.toggle('active', p.id === 'page-' + item.dataset.target));
+      headerTitle.textContent = item.dataset.title;
+      navItems.forEach(n => n.classList.toggle('active', n === item));
+      closeDrawer();
+    });
+  });
+
+  // Language: selects in place, no navigation, drawer stays open
+  document.querySelectorAll('.lang-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.lang-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+</script>
+
+</body>
+</html>
