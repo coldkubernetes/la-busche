@@ -51,7 +51,6 @@ export const bg: Partial<Record<TranslationKey, string>> = {
   'home.empty.title': 'Още няма маршрути',
   'home.empty.message': 'Натисни ⚙️, за да настроиш маршрута си',
   'home.empty.cta': 'Настрой маршрут',
-  'home.setup.aria': 'Отвори настройките',
   'home.tab.from_home': '🏠 От вкъщи',
   'home.tab.to_home': '🏡 Към вкъщи',
   'home.empty.from_home.title': 'Още няма маршрути в посока от вкъщи',

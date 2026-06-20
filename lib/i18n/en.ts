@@ -49,7 +49,6 @@ export const en = {
   'home.empty.title': 'No routes yet',
   'home.empty.message': 'Tap ⚙️ to set up your commute',
   'home.empty.cta': 'Set up commute',
-  'home.setup.aria': 'Open setup',
   'home.tab.from_home': '🏠 From Home',
   'home.tab.to_home': '🏡 To Home',
   'home.empty.from_home.title': 'No From Home routes yet',

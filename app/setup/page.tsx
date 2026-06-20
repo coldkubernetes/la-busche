@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { loadConfig, saveConfig, validateConfig, STORAGE_KEY, type AppConfig, type TileConfig } from '@/lib/tile-config';
-import { useTranslation, setLanguage } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n';
 import { hasAppKey, buildAuthUrl, exchangeCode, getTokens, clearTokens, isConnected, downloadFile, type DropboxTokens } from '@/lib/sync/dropboxSync';
 import { getSyncState, setSyncState, updateLastSynced, formatLastSynced } from '@/lib/sync/syncState';
 import { requestSync, syncNow } from '@/lib/sync/backgroundSync';
+import { SettingsDrawer } from '@/components/SettingsDrawer';
 
 // ─── Draggable tile list ──────────────────────────────────────────────────────
 
@@ -161,8 +162,18 @@ function DraggableTileList({
 // ─── Setup page ───────────────────────────────────────────────────────────────
 
 export default function SetupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SetupPageInner />
+    </Suspense>
+  );
+}
+
+function SetupPageInner() {
   const router = useRouter();
-  const { t, lang } = useTranslation();
+  const searchParams = useSearchParams();
+  const activeView = searchParams.get('view') === 'backup' ? 'backup' : 'routes';
+  const { t } = useTranslation();
   const [config, setConfig] = useState<AppConfig>({ version: 1, tiles: [], updatedAt: new Date(0).toISOString() });
   const [mounted, setMounted] = useState(false);
   const [importError, setImportError] = useState('');
@@ -187,7 +198,6 @@ export default function SetupPage() {
   } | null>(null);
   const [, setTick] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeView, setActiveView] = useState<'routes' | 'backup'>('routes');
 
   useEffect(() => {
     const cfg = loadConfig();
@@ -551,108 +561,7 @@ export default function SetupPage() {
       </div>
 
       {/* Menu drawer */}
-      {menuOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-          onClick={() => setMenuOpen(false)}
-        />
-      )}
-      <nav
-        className={[
-          'fixed top-0 right-0 bottom-0 w-[80%] max-w-[300px] bg-[#0e0e1a] border-l border-[#1e1e30] z-50 flex flex-col transition-transform duration-200',
-          menuOpen ? 'translate-x-0' : 'translate-x-full',
-        ].join(' ')}
-        style={{ paddingTop: 'max(2.4rem, env(safe-area-inset-top))' }}
-      >
-        <div className="px-5 pb-4 flex items-center justify-between border-b border-[#1e1e30]">
-          <span className="font-black text-white text-base">{t('setup.menu.title')}</span>
-          <button
-            onClick={() => setMenuOpen(false)}
-            aria-label={t('setup.menu.close.aria')}
-            className="text-[#8080cc] hover:text-white"
-            style={{ minWidth: 36, minHeight: 36 }}
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2">
-          <Link
-            href="/"
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl border bg-[#13131f] border-[#1e1e30] text-[#d6d6f5] font-bold text-sm hover:border-[#2a2a5a]"
-            style={{ minHeight: 44 }}
-          >
-            <span className="text-lg">🏠</span>
-            {t('setup.menu.home')}
-            <span className="ml-auto text-[#444466]">›</span>
-          </Link>
-
-          <button
-            onClick={() => { setActiveView('routes'); setMenuOpen(false); }}
-            className={[
-              'flex items-center gap-3 px-4 py-3 rounded-2xl border font-bold text-sm text-left transition-all duration-100',
-              activeView === 'routes'
-                ? 'bg-indigo-500/15 border-indigo-500/45 text-white'
-                : 'bg-[#13131f] border-[#1e1e30] text-[#d6d6f5] hover:border-[#2a2a5a]',
-            ].join(' ')}
-            style={{ minHeight: 44 }}
-          >
-            <span className="text-lg">🚌</span>
-            {t('setup.menu.routes')}
-            <span className="ml-auto text-[#444466]">›</span>
-          </button>
-
-          <button
-            onClick={() => { setActiveView('backup'); setMenuOpen(false); }}
-            className={[
-              'flex items-center gap-3 px-4 py-3 rounded-2xl border font-bold text-sm text-left transition-all duration-100',
-              activeView === 'backup'
-                ? 'bg-indigo-500/15 border-indigo-500/45 text-white'
-                : 'bg-[#13131f] border-[#1e1e30] text-[#d6d6f5] hover:border-[#2a2a5a]',
-            ].join(' ')}
-            style={{ minHeight: 44 }}
-          >
-            <span className="text-lg">📦</span>
-            {t('setup.menu.backup')}
-            <span className="ml-auto text-[#444466]">›</span>
-          </button>
-
-          {/* Language — selects in place, no navigation */}
-          <div className="mt-2 px-4 py-3 rounded-2xl bg-[#13131f] border border-[#1e1e30] flex flex-col gap-2">
-            <p className="flex items-center gap-3 font-bold text-sm text-[#d6d6f5]">
-              <span className="text-lg">🌐</span>
-              {t('setup.language_section')}
-            </p>
-            <div className="flex gap-2">
-              {(['en', 'bg'] as const).map((l) => (
-                <button
-                  key={l}
-                  onClick={() => setLanguage(l)}
-                  className={[
-                    'flex-1 py-2 rounded-xl border font-bold text-xs transition-all duration-100 active:scale-[0.97]',
-                    lang === l
-                      ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-200'
-                      : 'bg-[#0c0c16] border-[#1e1e30] text-[#8080cc] hover:border-[#3333aa] hover:text-white',
-                  ].join(' ')}
-                  style={{ minHeight: 40 }}
-                >
-                  {l === 'en' ? 'English' : 'Български'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <Link
-            href="/about"
-            className="mt-2 flex items-center gap-3 px-4 py-3 rounded-2xl border bg-[#13131f] border-[#1e1e30] text-[#d6d6f5] font-bold text-sm hover:border-[#2a2a5a]"
-            style={{ minHeight: 44 }}
-          >
-            <span className="text-lg">ℹ️</span>
-            {t('welcome.about')}
-            <span className="ml-auto text-[#444466]">›</span>
-          </Link>
-        </div>
-      </nav>
+      <SettingsDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       {/* Dropbox restore prompt */}
       {restorePrompt && (
