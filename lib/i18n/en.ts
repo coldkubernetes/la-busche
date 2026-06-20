@@ -72,7 +72,6 @@ export const en = {
   'setup.import.invalid': 'Invalid config file. Please select a valid La Busche config.',
   'setup.import.confirm': 'This will replace your {current} current routes with {imported} routes from the file. Continue?',
   'setup.delete.confirm': 'Delete this route?',
-  'setup.config_section': 'Config',
   'setup.tile.edit.aria': 'Edit route',
   'setup.tile.delete.aria': 'Delete route',
   'setup.tile_not_found': 'Route not found',
@@ -80,6 +79,14 @@ export const en = {
   'setup.import.title': 'Import config?',
   'setup.import.replace': 'Replace',
   'setup.language_section': 'Language',
+  'setup.menu.aria': 'Open menu',
+  'setup.menu.close.aria': 'Close menu',
+  'setup.menu.title': 'Menu',
+  'setup.menu.home': 'Home',
+  'setup.menu.routes': 'Routes',
+  'setup.menu.backup': 'Backup',
+  'setup.backup.json_section': 'JSON file',
+  'setup.backup.json_hint': 'Export saves all your routes to a file. Import replaces your current routes with one from a file.',
 
   // Dropbox sync
   'sync.section_title': 'Dropbox Sync',

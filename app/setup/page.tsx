@@ -186,6 +186,8 @@ export default function SetupPage() {
     date: string;
   } | null>(null);
   const [, setTick] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeView, setActiveView] = useState<'routes' | 'backup'>('routes');
 
   useEffect(() => {
     const cfg = loadConfig();
@@ -382,190 +384,275 @@ export default function SetupPage() {
 
   return (
     <main
-      className="min-h-screen bg-[#0c0c16] flex flex-col"
-      style={{
-        paddingTop: 'max(3rem, env(safe-area-inset-top))',
-        paddingBottom: 'max(2rem, env(safe-area-inset-bottom))',
-      }}
+      className="h-screen bg-[#0c0c16] flex flex-col overflow-hidden"
+      style={{ paddingTop: 'max(3rem, env(safe-area-inset-top))' }}
     >
-      {/* Header */}
-      <header className="px-4 pt-3 pb-4 flex items-center justify-between border-b border-[#1e1e30]">
+      {/* Header — fixed, never scrolls away, so the menu is always reachable */}
+      <header className="flex-shrink-0 px-4 pt-3 pb-4 flex items-center justify-between border-b border-[#1e1e30]">
         <Link
           href="/"
-          className="flex items-center justify-center text-indigo-400 font-bold text-sm hover:text-indigo-300 transition-colors"
-          style={{ minWidth: 44, minHeight: 44 }}
+          className="flex items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/30 px-3 text-indigo-300 font-bold text-sm hover:bg-indigo-500/20 hover:border-indigo-500/50 active:scale-[0.97] transition-all duration-150"
+          style={{ minHeight: 44 }}
         >
           {t('setup.done')}
         </Link>
-        <h1 className="text-lg font-black text-white">{t('setup.title')}</h1>
-        <div style={{ minWidth: 44 }} />
+        <h1 className="text-lg font-black text-white">
+          {activeView === 'backup' ? t('setup.menu.backup') : t('setup.title')}
+        </h1>
+        <button
+          onClick={() => setMenuOpen(true)}
+          aria-label={t('setup.menu.aria')}
+          className="flex flex-col items-center justify-center gap-[3px]"
+          style={{ minWidth: 44, minHeight: 44 }}
+        >
+          <span className="block w-5 h-0.5 rounded-full bg-[#c7c7f0]" />
+          <span className="block w-5 h-0.5 rounded-full bg-[#c7c7f0]" />
+          <span className="block w-5 h-0.5 rounded-full bg-[#c7c7f0]" />
+        </button>
       </header>
 
-      {/* Body */}
-      <div className="flex-1 px-4 pt-6 flex flex-col gap-6">
-        {/* Language */}
-        <div className="border-b border-[#1e1e30] pb-6">
-          <p className="text-xs text-[#555577] font-semibold uppercase tracking-widest mb-3">
-            {t('setup.language_section')}
-          </p>
-          <div className="flex gap-2">
-            {(['en', 'bg'] as const).map((l) => (
-              <button
-                key={l}
-                onClick={() => setLanguage(l)}
-                className={[
-                  'flex-1 py-3 rounded-2xl border font-bold text-sm transition-all duration-100 active:scale-[0.97]',
-                  lang === l
-                    ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-200'
-                    : 'bg-[#13131f] border-[#1e1e30] text-[#8080cc] hover:border-[#3333aa] hover:text-white',
-                ].join(' ')}
-                style={{ minHeight: 44 }}
-              >
-                {l === 'en' ? 'English' : 'Български'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Tile list */}
-        <div className="flex flex-col gap-3">
-          <Link
-            href="/setup/new"
-            className="flex items-center justify-center gap-2 py-4 rounded-2xl border border-dashed border-indigo-500/40 text-indigo-400 font-bold text-sm hover:bg-indigo-500/5 hover:border-indigo-500/60 active:scale-[0.97] transition-all duration-100"
-          >
-            {t('setup.add')}
-          </Link>
-          {mounted && sortedTiles.length > 0 && (
-            <p className="text-xs text-[#8080cc] font-semibold uppercase tracking-widest mt-1">
-              {t('setup.tiles_section')}
-            </p>
-          )}
-          {!mounted ? (
-            <div className="flex flex-col gap-2">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-20 rounded-2xl bg-[#13131f] border border-[#1a1a2a] animate-pulse" style={{ opacity: 1 - i * 0.3 }} />
-              ))}
-            </div>
-          ) : sortedTiles.length === 0 ? (
-            <div className="text-center py-12">
-              <span className="text-4xl mb-3 block">🚌</span>
-              <p className="text-[#8080cc] text-sm whitespace-pre-line">{t('setup.empty')}</p>
-            </div>
-          ) : (
-            <DraggableTileList
-              tiles={sortedTiles}
-              onReorder={handleReorder}
-              onEdit={(id) => router.push(`/setup/edit/${id}`)}
-              onDelete={handleDelete}
-            />
-          )}
-        </div>
-
-        {/* Dropbox Sync */}
-        <div className="border-t border-[#1e1e30] pt-6 flex flex-col gap-3">
-          <p className="text-xs text-[#555577] font-semibold uppercase tracking-widest">
-            {t('sync.section_title')}
-          </p>
-
-          {oauthPending ? (
-            <div className="px-4 py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] text-center text-sm text-[#8080cc] animate-pulse">
-              {t('sync.connecting')}
-            </div>
-          ) : !dropboxKey ? (
-            <div className="px-4 py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30]">
-              <p className="text-sm text-[#7777aa] leading-relaxed">
-                {t('sync.no_key.before')}{' '}
-                <code className="text-xs bg-white/5 px-1.5 py-0.5 rounded text-[#aaaadd]">
-                  NEXT_PUBLIC_LA_BUSCHE_DROPBOX_APP_KEY
-                </code>{' '}
-                {t('sync.no_key.after')}
+      {/* Body — only this area scrolls */}
+      <div
+        className="flex-1 overflow-y-auto px-4 pt-6 flex flex-col gap-6"
+        style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
+      >
+        {activeView === 'routes' ? (
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/setup/new"
+              className="flex items-center justify-center gap-2 py-4 rounded-2xl border border-dashed border-indigo-500/40 text-indigo-400 font-bold text-sm hover:bg-indigo-500/5 hover:border-indigo-500/60 active:scale-[0.97] transition-all duration-100"
+            >
+              {t('setup.add')}
+            </Link>
+            {mounted && sortedTiles.length > 0 && (
+              <p className="text-xs text-[#8080cc] font-semibold uppercase tracking-widest mt-1">
+                {t('setup.tiles_section')}
               </p>
-            </div>
-          ) : isConnected() && tokens ? (
-            <div className="flex flex-col gap-3">
-              <div className="px-4 py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] flex flex-col gap-1">
-                <p className="text-sm font-semibold text-white">
-                  {tokens.displayName ?? t('sync.dropbox_account')}
-                </p>
-                {tokens.email && (
-                  <p className="text-xs text-[#7777aa]">{tokens.email}</p>
-                )}
-                <p className="text-xs text-[#555577] mt-1">
-                  {t('sync.last_synced', { time: formatLastSynced(lastSynced) })}
-                </p>
+            )}
+            {!mounted ? (
+              <div className="flex flex-col gap-2">
+                {[1, 2].map((i) => (
+                  <div key={i} className="h-20 rounded-2xl bg-[#13131f] border border-[#1a1a2a] animate-pulse" style={{ opacity: 1 - i * 0.3 }} />
+                ))}
               </div>
+            ) : sortedTiles.length === 0 ? (
+              <div className="text-center py-12">
+                <span className="text-4xl mb-3 block">🚌</span>
+                <p className="text-[#8080cc] text-sm whitespace-pre-line">{t('setup.empty')}</p>
+              </div>
+            ) : (
+              <DraggableTileList
+                tiles={sortedTiles}
+                onReorder={handleReorder}
+                onEdit={(id) => router.push(`/setup/edit/${id}`)}
+                onDelete={handleDelete}
+              />
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Dropbox Sync */}
+            <div className="flex flex-col gap-3">
+              <p className="text-xs text-[#555577] font-semibold uppercase tracking-widest">
+                {t('sync.section_title')}
+              </p>
+
+              {oauthPending ? (
+                <div className="px-4 py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] text-center text-sm text-[#8080cc] animate-pulse">
+                  {t('sync.connecting')}
+                </div>
+              ) : !dropboxKey ? (
+                <div className="px-4 py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30]">
+                  <p className="text-sm text-[#7777aa] leading-relaxed">
+                    {t('sync.no_key.before')}{' '}
+                    <code className="text-xs bg-white/5 px-1.5 py-0.5 rounded text-[#aaaadd]">
+                      NEXT_PUBLIC_LA_BUSCHE_DROPBOX_APP_KEY
+                    </code>{' '}
+                    {t('sync.no_key.after')}
+                  </p>
+                </div>
+              ) : isConnected() && tokens ? (
+                <div className="flex flex-col gap-3">
+                  <div className="px-4 py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] flex flex-col gap-1">
+                    <p className="text-sm font-semibold text-white">
+                      {tokens.displayName ?? t('sync.dropbox_account')}
+                    </p>
+                    {tokens.email && (
+                      <p className="text-xs text-[#7777aa]">{tokens.email}</p>
+                    )}
+                    <p className="text-xs text-[#555577] mt-1">
+                      {t('sync.last_synced', { time: formatLastSynced(lastSynced) })}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={handleSyncNow}
+                      disabled={syncing}
+                      className="py-4 rounded-2xl bg-indigo-500/15 border border-indigo-500/40 text-indigo-300 font-semibold text-sm hover:bg-indigo-500/25 active:scale-[0.97] transition-all duration-100 disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                      {syncing ? t('sync.syncing') : t('sync.sync_now')}
+                    </button>
+                    <button
+                      onClick={handleDisconnect}
+                      className="py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] text-[#9090cc] font-semibold text-sm hover:border-rose-500/40 hover:text-rose-400 active:scale-[0.97] transition-all duration-100"
+                    >
+                      {t('sync.disconnect')}
+                    </button>
+                  </div>
+                  {syncError && (
+                    <p className="text-xs text-rose-400 px-1">{syncError}</p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleConnect}
+                    className="py-4 rounded-2xl bg-[#13131f] border border-[#2a2a5a] text-indigo-300 font-semibold text-sm hover:bg-indigo-500/10 hover:border-indigo-500/50 active:scale-[0.97] transition-all duration-100"
+                  >
+                    {t('sync.connect')}
+                  </button>
+                  {syncError && (
+                    <p className="text-xs text-rose-400 px-1">{syncError}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* JSON file */}
+            <div className="border-t border-[#1e1e30] pt-6 flex flex-col gap-3">
+              <p className="text-xs text-[#555577] font-semibold uppercase tracking-widest">
+                {t('setup.backup.json_section')}
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={handleSyncNow}
-                  disabled={syncing}
-                  className="py-4 rounded-2xl bg-indigo-500/15 border border-indigo-500/40 text-indigo-300 font-semibold text-sm hover:bg-indigo-500/25 active:scale-[0.97] transition-all duration-100 disabled:opacity-50 disabled:pointer-events-none"
+                  onClick={handleExport}
+                  className="py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] text-[#9090cc] font-semibold text-sm hover:border-[#3333aa] hover:text-white active:scale-[0.97] transition-all duration-100"
                 >
-                  {syncing ? t('sync.syncing') : t('sync.sync_now')}
+                  {t('setup.export')}
                 </button>
                 <button
-                  onClick={handleDisconnect}
-                  className="py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] text-[#9090cc] font-semibold text-sm hover:border-rose-500/40 hover:text-rose-400 active:scale-[0.97] transition-all duration-100"
+                  onClick={handleImportClick}
+                  className="py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] text-[#9090cc] font-semibold text-sm hover:border-[#3333aa] hover:text-white active:scale-[0.97] transition-all duration-100"
                 >
-                  {t('sync.disconnect')}
+                  {t('setup.import')}
                 </button>
               </div>
-              {syncError && (
-                <p className="text-xs text-rose-400 px-1">{syncError}</p>
-              )}
+              <p className="text-xs text-[#555577]">{t('setup.backup.json_hint')}</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileChange}
+                className="hidden"
+              />
             </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={handleConnect}
-                className="py-4 rounded-2xl bg-[#13131f] border border-[#2a2a5a] text-indigo-300 font-semibold text-sm hover:bg-indigo-500/10 hover:border-indigo-500/50 active:scale-[0.97] transition-all duration-100"
-              >
-                {t('sync.connect')}
-              </button>
-              {syncError && (
-                <p className="text-xs text-rose-400 px-1">{syncError}</p>
-              )}
-            </div>
-          )}
+          </>
+        )}
+      </div>
+
+      {/* Menu drawer */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+      <nav
+        className={[
+          'fixed top-0 right-0 bottom-0 w-[80%] max-w-[300px] bg-[#0e0e1a] border-l border-[#1e1e30] z-50 flex flex-col transition-transform duration-200',
+          menuOpen ? 'translate-x-0' : 'translate-x-full',
+        ].join(' ')}
+        style={{ paddingTop: 'max(2.4rem, env(safe-area-inset-top))' }}
+      >
+        <div className="px-5 pb-4 flex items-center justify-between border-b border-[#1e1e30]">
+          <span className="font-black text-white text-base">{t('setup.menu.title')}</span>
+          <button
+            onClick={() => setMenuOpen(false)}
+            aria-label={t('setup.menu.close.aria')}
+            className="text-[#8080cc] hover:text-white"
+            style={{ minWidth: 36, minHeight: 36 }}
+          >
+            ✕
+          </button>
         </div>
 
-        {/* Import / Export */}
-        <div className="border-t border-[#1e1e30] pt-6 flex flex-col gap-3">
-          <p className="text-xs text-[#555577] font-semibold uppercase tracking-widest">
-            {t('setup.config_section')}
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={handleExport}
-              className="py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] text-[#9090cc] font-semibold text-sm hover:border-[#3333aa] hover:text-white active:scale-[0.97] transition-all duration-100"
-            >
-              {t('setup.export')}
-            </button>
-            <button
-              onClick={handleImportClick}
-              className="py-4 rounded-2xl bg-[#13131f] border border-[#1e1e30] text-[#9090cc] font-semibold text-sm hover:border-[#3333aa] hover:text-white active:scale-[0.97] transition-all duration-100"
-            >
-              {t('setup.import')}
-            </button>
+        <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2">
+          <Link
+            href="/"
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl border bg-[#13131f] border-[#1e1e30] text-[#d6d6f5] font-bold text-sm hover:border-[#2a2a5a]"
+            style={{ minHeight: 44 }}
+          >
+            <span className="text-lg">🏠</span>
+            {t('setup.menu.home')}
+            <span className="ml-auto text-[#444466]">›</span>
+          </Link>
+
+          <button
+            onClick={() => { setActiveView('routes'); setMenuOpen(false); }}
+            className={[
+              'flex items-center gap-3 px-4 py-3 rounded-2xl border font-bold text-sm text-left transition-all duration-100',
+              activeView === 'routes'
+                ? 'bg-indigo-500/15 border-indigo-500/45 text-white'
+                : 'bg-[#13131f] border-[#1e1e30] text-[#d6d6f5] hover:border-[#2a2a5a]',
+            ].join(' ')}
+            style={{ minHeight: 44 }}
+          >
+            <span className="text-lg">🚌</span>
+            {t('setup.menu.routes')}
+            <span className="ml-auto text-[#444466]">›</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveView('backup'); setMenuOpen(false); }}
+            className={[
+              'flex items-center gap-3 px-4 py-3 rounded-2xl border font-bold text-sm text-left transition-all duration-100',
+              activeView === 'backup'
+                ? 'bg-indigo-500/15 border-indigo-500/45 text-white'
+                : 'bg-[#13131f] border-[#1e1e30] text-[#d6d6f5] hover:border-[#2a2a5a]',
+            ].join(' ')}
+            style={{ minHeight: 44 }}
+          >
+            <span className="text-lg">📦</span>
+            {t('setup.menu.backup')}
+            <span className="ml-auto text-[#444466]">›</span>
+          </button>
+
+          {/* Language — selects in place, no navigation */}
+          <div className="mt-2 px-4 py-3 rounded-2xl bg-[#13131f] border border-[#1e1e30] flex flex-col gap-2">
+            <p className="flex items-center gap-3 font-bold text-sm text-[#d6d6f5]">
+              <span className="text-lg">🌐</span>
+              {t('setup.language_section')}
+            </p>
+            <div className="flex gap-2">
+              {(['en', 'bg'] as const).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLanguage(l)}
+                  className={[
+                    'flex-1 py-2 rounded-xl border font-bold text-xs transition-all duration-100 active:scale-[0.97]',
+                    lang === l
+                      ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-200'
+                      : 'bg-[#0c0c16] border-[#1e1e30] text-[#8080cc] hover:border-[#3333aa] hover:text-white',
+                  ].join(' ')}
+                  style={{ minHeight: 40 }}
+                >
+                  {l === 'en' ? 'English' : 'Български'}
+                </button>
+              ))}
+            </div>
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </div>
 
-        {/* About link */}
-        <div className="mt-auto pt-2 pb-1 text-center">
           <Link
             href="/about"
-            className="text-[0.6rem] text-[#555588] hover:text-[#8888cc] tracking-widest uppercase font-semibold transition-colors"
+            className="mt-2 flex items-center gap-3 px-4 py-3 rounded-2xl border bg-[#13131f] border-[#1e1e30] text-[#d6d6f5] font-bold text-sm hover:border-[#2a2a5a]"
+            style={{ minHeight: 44 }}
           >
+            <span className="text-lg">ℹ️</span>
             {t('welcome.about')}
+            <span className="ml-auto text-[#444466]">›</span>
           </Link>
         </div>
-      </div>
+      </nav>
 
       {/* Dropbox restore prompt */}
       {restorePrompt && (

@@ -74,7 +74,6 @@ export const bg: Partial<Record<TranslationKey, string>> = {
   'setup.import.invalid': 'Файлът не изглежда валиден. Избери валидна конфигурация за La Busche.',
   'setup.import.confirm': 'Това ще замени текущите ти маршрути ({current}) с маршрутите от файла ({imported}). Продължаваме ли?',
   'setup.delete.confirm': 'Да изтрия ли този маршрут?',
-  'setup.config_section': 'Конфигурация',
   'setup.tile.edit.aria': 'Редактирай маршрут',
   'setup.tile.delete.aria': 'Изтрий маршрут',
   'setup.tile_not_found': 'Маршрутът не е намерен',
@@ -82,6 +81,14 @@ export const bg: Partial<Record<TranslationKey, string>> = {
   'setup.import.title': 'Да заредя ли настройките?',
   'setup.import.replace': 'Замени',
   'setup.language_section': 'Език',
+  'setup.menu.aria': 'Отвори менюто',
+  'setup.menu.close.aria': 'Затвори менюто',
+  'setup.menu.title': 'Меню',
+  'setup.menu.home': 'Начало',
+  'setup.menu.routes': 'Маршрути',
+  'setup.menu.backup': 'Резервно копие',
+  'setup.backup.json_section': 'JSON файл',
+  'setup.backup.json_hint': 'Запазването създава файл с всичките ти маршрути. Зареждането замества текущите маршрути с тези от избрания файл.',
 
   // Dropbox sync
   'sync.section_title': 'Dropbox синхронизация',
