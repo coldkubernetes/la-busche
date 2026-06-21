@@ -6,6 +6,7 @@ import { loadConfig, STORAGE_KEY, type TileConfig } from '@/lib/tile-config';
 import { useTranslation } from '@/lib/i18n';
 import { Welcome } from './Welcome';
 import { BrandLoading } from './BrandLoading';
+import { SettingsDrawer } from '@/components/SettingsDrawer';
 
 type Tab = 'from_home' | 'to_home';
 
@@ -40,6 +41,7 @@ export default function HomePage() {
   // Skip the splash if it has already been shown this browser session.
   const [splashDone, setSplashDone] = useState(false);
   const [splashMinElapsed, setSplashMinElapsed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Splash timing: hold for at least SPLASH_MIN_MS, end as soon as GTFS is
   // ready after that, and never run past SPLASH_MAX_MS.
@@ -169,13 +171,17 @@ export default function HomePage() {
           </p>
         </div>
 
-        <Link
-          href="/setup"
-          aria-label={t('home.setup.aria')}
+        <button
+          onClick={() => setMenuOpen(true)}
+          aria-label={t('setup.menu.aria')}
           className="flex items-center justify-center w-11 h-11 rounded-2xl bg-[#13131f] border border-[#1e1e30] text-[#8888cc] hover:text-white hover:border-[#3333aa] active:scale-95 transition-all duration-100"
         >
-          <span className="text-xl leading-none">⚙️</span>
-        </Link>
+          <span className="flex flex-col items-center justify-center gap-[3px]">
+            <span className="block w-5 h-0.5 rounded-full bg-current" />
+            <span className="block w-5 h-0.5 rounded-full bg-current" />
+            <span className="block w-5 h-0.5 rounded-full bg-current" />
+          </span>
+        </button>
       </header>
 
       {/* Tab switcher */}
@@ -238,6 +244,8 @@ export default function HomePage() {
           About · Open Source · CC BY 4.0
         </Link>
       </footer>
+
+      <SettingsDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
     </main>
   );
 }
