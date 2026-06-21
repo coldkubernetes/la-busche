@@ -6,6 +6,8 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation, setLanguage } from '@/lib/i18n';
 import { Stream } from '@/components/stream/Stream';
 import { TAPS_TO_REVEAL, TAP_RESET_WINDOW_MS } from '@/components/stream/constants';
+import { StreamV2 } from '@/components/stream2/StreamV2';
+import { LONG_PRESS_MS, LONG_PRESS_MOVE_TOLERANCE } from '@/components/stream2/constants2';
 
 function itemClass(active: boolean) {
   return [
@@ -27,26 +29,82 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
   const isBackup = pathname === '/setup' && view === 'backup';
   const isAbout = pathname === '/about';
 
-  // A quiet door: five taps on the menu's own empty background reveal the
-  // stream. Taps on actual items do nothing toward it. The count is per-open
-  // and ephemeral — we never remember that someone found it.
+  // Two quiet doors on the menu's own empty background — never on a link,
+  // button, or input. They share the same dead space but cannot collide:
+  //   • FIVE quick taps          → v1 (Stream)
+  //   • ONE long-press (~1.5s)   → v2 (StreamV2)
+  // A tap only counts once it ends as a clean, brief, still release, so a
+  // long-press (held past the threshold) is consumed by v2 and never pollutes
+  // the v1 tap count; and a press that moves too far or is held long counts as
+  // nothing toward v1. The count is per-open and ephemeral — we never remember
+  // that someone found either one.
   const [streamOpen, setStreamOpen] = useState(false);
+  const [streamV2Open, setStreamV2Open] = useState(false);
   const taps = useRef<{ n: number; at: number }>({ n: 0, at: 0 });
+  // Live press being tracked on the empty background (null when none).
+  const press = useRef<{
+    x: number;
+    y: number;
+    timer: number | null;
+    moved: boolean;
+    consumed: boolean; // true once the long-press has opened v2
+  } | null>(null);
 
-  // Re-hide the door whenever the menu itself closes.
+  const clearPressTimer = () => {
+    const p = press.current;
+    if (p && p.timer !== null) {
+      window.clearTimeout(p.timer);
+      p.timer = null;
+    }
+  };
+
+  // Re-hide both doors whenever the menu itself closes.
   useEffect(() => {
     if (!open) {
       setStreamOpen(false);
+      setStreamV2Open(false);
       taps.current = { n: 0, at: 0 };
+      clearPressTimer();
+      press.current = null;
     }
   }, [open]);
 
+  const onEmptyBackground = (e: React.PointerEvent) =>
+    !(e.target as HTMLElement).closest('a,button,input,select,[role="button"]');
+
   const onPanelPointerDown = (e: React.PointerEvent) => {
-    if (streamOpen) return;
-    // Only empty panel background counts — never a link, button, or input.
-    if ((e.target as HTMLElement).closest('a,button,input,select,[role="button"]')) {
-      return;
+    if (streamOpen || streamV2Open) return;
+    if (!onEmptyBackground(e)) return; // only the empty panel background counts
+    clearPressTimer();
+    const p = { x: e.clientX, y: e.clientY, timer: null as number | null, moved: false, consumed: false };
+    // The v2 door: hold still and long enough, the menu dissolves into v2.
+    p.timer = window.setTimeout(() => {
+      if (press.current === p && !p.moved) {
+        p.consumed = true;
+        taps.current = { n: 0, at: 0 }; // a long-press is never a v1 tap
+        setStreamV2Open(true);
+      }
+    }, LONG_PRESS_MS);
+    press.current = p;
+  };
+
+  const onPanelPointerMove = (e: React.PointerEvent) => {
+    const p = press.current;
+    if (!p || p.moved) return;
+    if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > LONG_PRESS_MOVE_TOLERANCE) {
+      p.moved = true; // a drag is neither a v1 tap nor a v2 long-press
+      clearPressTimer();
     }
+  };
+
+  const onPanelPointerUp = () => {
+    const p = press.current;
+    if (!p) return;
+    clearPressTimer();
+    press.current = null;
+    // Consumed by v2, or moved too far → counts as nothing toward v1.
+    if (p.consumed || p.moved) return;
+    // A clean, brief, still release: this is a v1 tap.
     const now = Date.now();
     const t = taps.current;
     t.n = now - t.at > TAP_RESET_WINDOW_MS ? 1 : t.n + 1;
@@ -63,19 +121,22 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
         <div
           className={[
             'fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-200',
-            streamOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
+            streamOpen || streamV2Open ? 'opacity-0 pointer-events-none' : 'opacity-100',
           ].join(' ')}
           onClick={onClose}
         />
       )}
       <nav
         onPointerDown={onPanelPointerDown}
+        onPointerMove={onPanelPointerMove}
+        onPointerUp={onPanelPointerUp}
+        onPointerCancel={onPanelPointerUp}
         className={[
           // The menu dissolves into water on reveal (opacity, not a slide), and
           // reforms from the same place when the stream settles closed.
           'fixed top-0 right-0 bottom-0 w-[80%] max-w-[300px] bg-[#0e0e1a] border-l border-[#1e1e30] z-50 flex flex-col transition-all duration-200',
           open ? 'translate-x-0' : 'translate-x-full',
-          streamOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
+          streamOpen || streamV2Open ? 'opacity-0 pointer-events-none' : 'opacity-100',
         ].join(' ')}
         style={{ paddingTop: 'max(2.4rem, env(safe-area-inset-top))' }}
       >
@@ -158,10 +219,17 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
         </div>
       </nav>
 
-      {/* The stream: surfaces above the dissolving menu, fades in like water. */}
+      {/* v1: surfaces above the dissolving menu, fades in like water. */}
       {streamOpen && (
         <div className="fixed inset-0 z-[60] bg-[#0c0c16] animate-[fadeIn_700ms_ease-out]">
           <Stream onClose={() => setStreamOpen(false)} />
+        </div>
+      )}
+
+      {/* v2: same dissolve-into-water reveal, its own independent door. */}
+      {streamV2Open && (
+        <div className="fixed inset-0 z-[60] bg-[#0c0c16] animate-[fadeIn_700ms_ease-out]">
+          <StreamV2 onClose={() => setStreamV2Open(false)} />
         </div>
       )}
     </>
