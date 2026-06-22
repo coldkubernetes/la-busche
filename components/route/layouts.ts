@@ -115,4 +115,42 @@ export const LAYOUTS: RouteLayout[] = [
       '###############',
     ],
   },
+  {
+    id: 'route-7',
+    label: 'Route 7',
+    // Wide and breezy: two long avenues with stop pellets studding every
+    // junction. Rewards fast, committed left-right sweeps that keep the flow up.
+    map: [
+      '#############',
+      '#o..o...o..o#',
+      '#.#.#.#.#.#.#',
+      '#...........#',
+      '#.###.#.###.#',
+      '#@.........o#',
+      '#.###.#.###.#',
+      '#...........#',
+      '#.#.#.#.#.#.#',
+      '#o..o...o..o#',
+      '#############',
+    ],
+  },
+  {
+    id: 'route-305',
+    label: 'Route 305',
+    // Symmetric chambers around a central spawn. Eight stop pellets ring the
+    // board — the route-planning showpiece now that stops pay big.
+    map: [
+      '###############',
+      '#o....o.o....o#',
+      '#.###.#.#.###.#',
+      '#.#.........#.#',
+      '#.#.#.###.#.#.#',
+      '#...#.#@#.#...#',
+      '#.#.#.#.#.#.#.#',
+      '#.#.........#.#',
+      '#.###.#.#.###.#',
+      '#o....o.o....o#',
+      '###############',
+    ],
+  },
 ];

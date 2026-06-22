@@ -8,6 +8,7 @@
  */
 
 const KEY = 'la-busche.route';
+const DAYLIGHT_KEY = 'la-busche.route.daylight';
 
 export interface RouteBest {
   /** Fastest completion, in ms. */
@@ -68,4 +69,27 @@ export function recordRun(
   store[layoutId] = best;
   writeStore(store);
   return { newTime, newScore, best };
+}
+
+/**
+ * Daylight (high-contrast) preference — a crisper, brighter render for playing
+ * in bright light / direct sun, where the soft dark-on-dark glow washes out.
+ * Persisted on its own key and remembered across sessions.
+ */
+export function readDaylight(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.localStorage.getItem(DAYLIGHT_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function writeDaylight(on: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(DAYLIGHT_KEY, on ? '1' : '0');
+  } catch {
+    /* private mode / quota — falls back to the dark default, which is fine. */
+  }
 }

@@ -49,9 +49,10 @@ export const FLOW_IDLE_DECAY_PER_SEC = 0.7;
 
 // ── Score ───────────────────────────────────────────────────────────────────
 // Base points for an ordinary dot and a bus-stop pellet, each multiplied by the
-// live (1 + flow) multiplier at the moment of pickup.
+// live (1 + flow) multiplier at the moment of pickup. The bigger bus-stop
+// pellets are worth markedly more — a clear reason to plan a route through them.
 export const DOT_VALUE = 10;
-export const STOP_VALUE = 60;
+export const STOP_VALUE = 150;
 
 // ── The "route complete" beat ────────────────────────────────────────────────
 // After the last pellet: hold the finished board for a moment, then dissolve to
