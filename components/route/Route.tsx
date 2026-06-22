@@ -45,7 +45,7 @@ import {
 } from './constants';
 import { LAYOUTS } from './layouts';
 import { Tile, parseLayout, isTraversable } from './grid';
-import { readBest, recordRun, RouteBest } from './storage';
+import { readBest, recordRun, readDaylight, writeDaylight, RouteBest } from './storage';
 import { makePalette, presetForDay } from '../stream/palette';
 
 /** A finished run, surfaced to the React layer for the "route complete" beat. */
@@ -83,6 +83,24 @@ export function Route({ onClose }: { onClose: () => void }) {
   // Which layout is in play, and the finished-run beat (null while playing).
   const [index, setIndex] = useState(0);
   const [result, setResult] = useState<RunResult | null>(null);
+
+  // Daylight (high-contrast) mode for bright light. State drives the toggle's
+  // look; the ref lets the render loop read it live without re-initialising.
+  const [daylight, setDaylight] = useState(false);
+  const daylightRef = useRef(false);
+  useEffect(() => {
+    const d = readDaylight();
+    setDaylight(d);
+    daylightRef.current = d;
+  }, []);
+  const toggleDaylight = useCallback(() => {
+    setDaylight((d) => {
+      const next = !d;
+      daylightRef.current = next;
+      writeDaylight(next);
+      return next;
+    });
+  }, []);
 
   // Live HUD spans, written imperatively each frame to avoid per-frame React
   // re-renders. Route label + best are static per layout and live in JSX.
@@ -350,13 +368,18 @@ export function Route({ onClose }: { onClose: () => void }) {
     };
 
     const draw = (t: number) => {
+      const day = daylightRef.current;
+
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = palette.bg;
+      // Daylight lifts the backdrop off pure-black so the maze separates from
+      // screen glare; the dark default stays moody.
+      ctx.fillStyle = day ? '#1a1c2e' : palette.bg;
       ctx.fillRect(0, 0, w, h);
 
-      // Streets as faint, soft channels — round-capped strokes between adjacent
-      // street centres, one path, one stroke. Reads as light channels, not walls.
-      ctx.strokeStyle = 'rgba(128, 138, 214, 0.10)';
+      // Streets as soft channels — round-capped strokes between adjacent street
+      // centres, one path, one stroke. Reads as light channels, not walls. In
+      // daylight they're far more opaque so the network is legible in sun.
+      ctx.strokeStyle = day ? 'rgba(168, 180, 245, 0.42)' : 'rgba(128, 138, 214, 0.10)';
       ctx.lineWidth = tile * CHANNEL_FRAC;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -378,8 +401,10 @@ export function Route({ onClose }: { onClose: () => void }) {
       }
       ctx.stroke();
 
-      // Pellets as soft radial glows (passengers waiting under the lights).
-      ctx.globalCompositeOperation = 'lighter';
+      // Pellets — soft radial glows by default (passengers under the lights).
+      // In daylight, soft additive glow washes out, so we draw crisp solid
+      // discs with a small glow halo instead: same light language, far more
+      // legible in sun.
       const dotR = tile * DOT_RADIUS_FRAC;
       const stopR = tile * STOP_RADIUS_FRAC;
       for (let row = 0; row < rows; row++) {
@@ -390,15 +415,28 @@ export function Route({ onClose }: { onClose: () => void }) {
           const cy = py(row);
           const phase = (col * 7 + row * 13) * 0.5;
           const twinkle = 0.7 + 0.3 * Math.sin(t * 0.0018 + phase) * calm;
-          if (tt === Tile.Dot) {
-            ctx.globalAlpha = 0.85 * twinkle;
-            ctx.drawImage(dotSprite, cx - dotR, cy - dotR, dotR * 2, dotR * 2);
+          const r = tt === Tile.Stop ? stopR : dotR;
+          const sprite = tt === Tile.Stop ? stopSprite : dotSprite;
+          if (day) {
+            // halo (additive) + crisp solid core (opaque)
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = 0.5 * twinkle;
+            ctx.drawImage(sprite, cx - r, cy - r, r * 2, r * 2);
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = tt === Tile.Stop ? palette.rare : palette.dot;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r * (tt === Tile.Stop ? 0.66 : 0.78), 0, Math.PI * 2);
+            ctx.fill();
           } else {
-            ctx.globalAlpha = Math.min(1, 0.95 * twinkle);
-            ctx.drawImage(stopSprite, cx - stopR, cy - stopR, stopR * 2, stopR * 2);
-            // a small bright core so a stop reads as a landmark
-            const cr = stopR * 0.5;
-            ctx.drawImage(stopSprite, cx - cr, cy - cr, cr * 2, cr * 2);
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = Math.min(1, (tt === Tile.Stop ? 0.95 : 0.85) * twinkle);
+            ctx.drawImage(sprite, cx - r, cy - r, r * 2, r * 2);
+            if (tt === Tile.Stop) {
+              // a small bright core so a stop reads as a landmark
+              const cr = r * 0.5;
+              ctx.drawImage(sprite, cx - cr, cy - cr, cr * 2, cr * 2);
+            }
           }
         }
       }
@@ -420,6 +458,12 @@ export function Route({ onClose }: { onClose: () => void }) {
       drawRoundRect(x0, y0, bw, bh, r);
       ctx.fillStyle = finished ? BUS_BODY_DIM : BUS_BODY;
       ctx.fill();
+      if (day) {
+        // a thin dark rim keeps the bus crisp against the brighter daylight field
+        ctx.strokeStyle = 'rgba(20, 20, 36, 0.55)';
+        ctx.lineWidth = Math.max(1, tile * 0.04);
+        ctx.stroke();
+      }
 
       // Collected-fill: a brighter wash rising from the bottom, clipped to body.
       const fill = totalDots > 0 ? (totalDots - dotsRemaining) / totalDots : 0;
@@ -619,6 +663,23 @@ export function Route({ onClose }: { onClose: () => void }) {
           </span>
         </div>
       </div>
+
+      {/* Bright-light toggle — a small, restrained contrast switch for playing
+          in sun. Sits top-centre, out of the steering field; remembers itself. */}
+      <button
+        onClick={toggleDaylight}
+        aria-label="Toggle bright-light contrast"
+        aria-pressed={daylight}
+        className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center rounded-full text-lg leading-none transition-colors"
+        style={{
+          top: 'max(1.1rem, env(safe-area-inset-top))',
+          minWidth: 40,
+          minHeight: 40,
+          color: daylight ? '#e7b24a' : '#5b5b88',
+        }}
+      >
+        ◐
+      </button>
 
       {/* One-time control whisper, fades on first input. */}
       <div
