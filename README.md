@@ -2,6 +2,16 @@
 
 Personal Sofia public transport arrival times app. Displays live arrivals for a fixed set of commute routes using Sofia Urban Mobility Center GTFS data — no API key required.
 
+## Features
+
+- **Tile dashboard** — configure your own commute tiles (home/work, outbound/inbound) on the Home screen; each opens a live arrivals board.
+- **Live arrivals board** — per-tile detail page (`/board/[cardId]`) with countdowns, on-time / delayed / early status chips, GTFS-RT real-time delays, and 30 s auto-refresh.
+- **Real-time data** — combines static GTFS with GTFS-RT trip updates; works for buses, trolleybuses and trams.
+- **Bilingual UI** — full English 🇬🇧 / Български 🇧🇬 interface, switchable from the menu.
+- **No accounts** — all configuration lives in the browser's `localStorage`. Optional Dropbox sync keeps it backed up and shared across devices (see below).
+- **PWA-friendly** — installable icons, native pull-to-refresh on mobile, safe-area aware layout, and a branded bus-driving loading animation.
+- **Hidden gems** — two quiet easter eggs tucked behind the settings menu (see [Hidden gems](#hidden-gems)).
+
 ## Tech stack
 
 - Next.js 14 (App Router, TypeScript)
@@ -89,6 +99,45 @@ No environment variables or API keys needed.
 `GET /api/stops/search?q=QUERY` — search stops by name or code, returns top 10.
 
 `GET /api/stops/STOP_CODE/lines` — all lines serving a stop, grouped by type.
+
+`GET /api/gtfs/status` — GTFS cache status (last fetch, TTL).
+
+### Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Home dashboard of commute tiles |
+| `/board/[cardId]` | Live arrivals board for a single tile |
+| `/setup` | Manage tiles (`?view=routes`) and backup/sync (`?view=backup`) |
+| `/about` | About, data credit, contact |
+
+---
+
+## Hidden gems
+
+Two small, deliberately undocumented-in-app experiences hide behind the empty
+background of the settings menu (the ☰ drawer). They never sit on a link or
+button, share the same dead space, and can't collide — each is fully optional,
+self-contained, and trivially removable by deleting its folder under
+`components/`.
+
+- **Stream** (`components/stream/`) — an ambient water surface you stir with one
+  finger. No score, no timer, nothing to lose; lift your finger and it settles
+  to glass on its own. The scene quietly moves on while you're away, and a rare
+  "drift day" sends a single object passing through. **Reveal it with five quick
+  taps** on the menu's empty background. Press and hold still to close.
+
+- **Route** (`components/route/`) — a tiny bus-eats-dots maze game and the
+  deliberate opposite of Stream: it *has* a goal, a score and levels. Drive a bus
+  through handcrafted Sofia-flavoured street mazes collecting waiting passengers
+  and bus-stop pellets, chasing completion, time and an unbroken-pickup *flow*
+  multiplier. No enemies, the bus can't die. Six routes, a high-contrast
+  "daylight" mode, and a saved best run per route. **Reveal it with one clear
+  directional swipe** across the same empty menu background. Touch, mouse and
+  arrow keys all steer; press and hold still to close.
+
+Both respect `prefers-reduced-motion`, store nothing about having been found, and
+have zero impact on the rest of the app.
 
 ---
 
